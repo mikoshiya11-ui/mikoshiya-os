@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スタッフルーム — MIKOSHIYA</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+    background: #f0f0eb;
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+  .top-bar {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .top-bar .title { font-size: 16px; font-weight: 700; }
+  .top-bar .date { font-size: 12px; color: #aab; }
+  .btn-sm {
+    font-size: 12px; padding: 6px 12px;
+    border-radius: 8px; border: none; cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-logout { background: rgba(255,255,255,0.1); color: #fff; }
+
+  /* タブ */
+  .tabs {
+    display: flex;
+    background: #fff;
+    border-bottom: 2px solid #f0f0f0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tab {
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+  }
+  .tab.active { color: #0f3460; border-bottom-color: #0f3460; }
+
+  .tab-content { display: none; padding: 16px; max-width: 640px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+
+  /* カード */
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    letter-spacing: 0.1em;
+    margin-bottom: 14px;
+  }
+
+  /* QRスキャン入力 */
+  .qr-input-area {
+    display: flex; gap: 8px;
+  }
+  .qr-input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .qr-input:focus { border-color: #0f3460; }
+  .btn-primary {
+    padding: 12px 18px;
+    background: #0f3460;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-danger {
+    padding: 8px 14px;
+    background: #d32f2f;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-success {
+    padding: 8px 14px;
+    background: #2e7d32;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* メンバー確認パネル */
+  #memberPanel {
+    background: #e8f0fe;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 12px;
+    display: none;
+  }
+  #memberPanel .name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  #memberPanel .meta { font-size: 13px; color: #555; margin-bottom: 12px; }
+  #memberPanel .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* 本日の来訪一覧 */
+  .visit-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px auto;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+    font-size: 13px;
+  }
+  .visit-row:last-child { border-bottom: none; }
+  .visit-row .member-name { font-weight: 600; }
+  .visit-row .time { color: #888; font-size: 12px; }
+  .status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .status-in { background: #e8f5e9; color: #2e7d32; }
+  .status-out { background: #f5f5f5; color: #888; }
+
+  /* 注文一覧 */
+  .order-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+    font-size: 13px;
+  }
+  .order-row:last-child { border-bottom: none; }
+
+  /* 統計 */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-num { font-size: 26px; font-weight: 700; color: #0f3460; }
+  .stat-label { font-size: 11px; color: #888; margin-top: 2px; }
+
+  /* 会員一覧 */
+  .member-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .member-row:last-child { border-bottom: none; }
+  .member-row .id { font-size: 11px; color: #aaa; }
+  .member-row .name { font-size: 14px; font-weight: 600; }
+  .member-row .email { font-size: 12px; color: #888; }
+  .plan-tag {
+    font-size: 11px; padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .plan-monthly { background: #e3f2fd; color: #1565c0; }
+  .plan-dropin { background: #f5f5f5; color: #555; }
+
+  .empty { font-size: 13px; color: #bbb; text-align: center; padding: 20px 0; }
+
+  /* モーダル */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 16px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 400px;
+  }
+  .modal h3 { font-size: 16px; margin-bottom: 16px; }
+  .form-group { margin-bottom: 12px; }
+  .form-group label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 12px;
+    border: 1.5px solid #ddd; border-radius: 8px;
+    font-size: 14px; outline: none;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: #0f3460; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .btn-cancel { padding: 10px 16px; background: #f5f5f5; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="loading-overlay" style="position:fixed;inset:0;background:#f0f0eb;display:flex;align-items:center;justify-content:center;font-size:14px;color:#888;z-index:100">
+  認証確認中...
+</div>
+
+<div id="app" style="display:none">
+  <div class="top-bar">
+    <div>
+      <div class="title">🏠 スタッフルーム</div>
+      <div class="date" id="todayDate">—</div>
+    </div>
+    <button class="btn-sm btn-logout" id="btnLogout">ログアウト</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('checkin')">入退室</div>
+    <div class="tab" onclick="switchTab('today')">本日 (<span id="todayCount">0</span>)</div>
+    <div class="tab" onclick="switchTab('orders')">注文</div>
+    <div class="tab" onclick="switchTab('members')">会員</div>
+  </div>
+
+  <!-- ① 入退室タブ -->
+  <div class="tab-content active" id="tab-checkin">
+    <div class="card">
+      <div class="card-title">QRコード読み取り / 会員ID入力</div>
+      <div class="qr-input-area">
+        <input type="text" class="qr-input" id="qrInput" placeholder="会員ID (例: A-00001)" autocomplete="off">
+        <button class="btn-primary" onclick="lookupMember()">確認</button>
+      </div>
+      <div id="memberPanel">
+        <div class="name" id="panelName">—</div>
+        <div class="meta" id="panelMeta">—</div>
+        <div class="actions">
+          <button class="btn-success" id="btnEnter" onclick="recordEnter()">▶ 入室</button>
+          <button class="btn-danger" id="btnExit" onclick="recordExit()">■ 退室</button>
+        </div>
+      </div>
+      <div id="actionResult" style="margin-top:12px;font-size:13px;"></div>
+    </div>
+  </div>
+
+  <!-- ② 本日タブ -->
+  <div class="tab-content" id="tab-today">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="statIn">0</div>
+        <div class="stat-label">滞在中</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statToday">0</div>
+        <div class="stat-label">本日来訪</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statSales">¥0</div>
+        <div class="stat-label">本日売上</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">本日の来訪</div>
+      <div id="todayVisitList"><div class="empty">データなし</div></div>
+    </div>
+  </div>
+
+  <!-- ③ 注文タブ -->
+  <div class="tab-content" id="tab-orders">
+    <div class="card">
+      <div class="card-title">未処理の注文</div>
+      <div id="orderList"><div class="empty">未処理の注文はありません</div></div>
+    </div>
+  </div>
+
+  <!-- ④ 会員タブ -->
+  <div class="tab-content" id="tab-members">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:0">会員一覧</div>
+        <button class="btn-primary btn-sm" onclick="openAddMember()" style="font-size:12px;padding:6px 12px">＋追加</button>
+      </div>
+      <div id="memberList"><div class="empty">読み込み中...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 会員追加モーダル -->
+<div class="modal-backdrop" id="addMemberModal">
+  <div class="modal">
+    <h3>会員を追加</h3>
+    <div class="form-group">
+      <label>会員ID (A-XXXXX形式)</label>
+      <input type="text" id="newMemberId" placeholder="A-00066">
+    </div>
+    <div class="form-group">
+      <label>名前</label>
+      <input type="text" id="newMemberName" placeholder="山田 太郎">
+    </div>
+    <div class="form-group">
+      <label>メール (Googleアカウント)</label>
+      <input type="email" id="newMemberEmail" placeholder="example@gmail.com">
+    </div>
+    <div class="form-group">
+      <label>プラン</label>
+      <select id="newMemberPlan">
+        <option value="dropin">ドロップイン</option>
+        <option value="monthly">月額</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>ランク</label>
+      <select id="newMemberRank">
+        <option value="一般">一般</option>
+        <option value="特別会員">特別会員</option>
+        <option value="スタッフ">スタッフ</option>
+        <option value="オーナー">オーナー</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn-primary" onclick="saveMember()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://ashoqzwxgaovepclbawf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzaG9xend4Z2FvdmVwY2xiYXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTk2MTMsImV4cCI6MjEwMTI3NTYxM30.Ke1Fa8MSTwj3OFH5mrh2ViPFCq4GUpYQh5vegyGbMLQ';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentMember = null;
+let currentVisitId = null;
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { location.href = 'index.html'; return; }
+
+  // スタッフ権限チェック
+  const { data: me } = await sb.from('members').select('rank').eq('email', session.user.email).single();
+  if (!me || !['スタッフ', 'オーナー'].includes(me.rank)) {
+    alert('スタッフ専用ページです');
+    location.href = 'member-card.html';
+    return;
+  }
+
+  document.getElementById('loading-overlay').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  const today = new Date();
+  document.getElementById('todayDate').textContent =
+    today.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+
+  // Enterキーでlookup
+  document.getElementById('qrInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') lookupMember();
+  });
+
+  loadTodayData();
+  loadOrders();
+  loadMembers();
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['checkin','today','orders','members'][i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+async function lookupMember() {
+  const id = document.getElementById('qrInput').value.trim();
+  if (!id) return;
+
+  const { data: member } = await sb.from('members').select('*').eq('id', id).single();
+  if (!member) {
+    document.getElementById('memberPanel').style.display = 'none';
+    document.getElementById('actionResult').innerHTML = '<span style="color:#d32f2f">会員が見つかりません: ' + id + '</span>';
+    return;
+  }
+
+  currentMember = member;
+
+  // 今日のアクティブな visit を確認
+  const today = new Date().toISOString().split('T')[0];
+  const { data: visits } = await sb.from('visits')
+    .select('*').eq('member_id', id).eq('date', today).is('exit_time', null);
+  currentVisitId = visits?.[0]?.id || null;
+
+  document.getElementById('panelName').textContent = member.name || id;
+  document.getElementById('panelMeta').textContent =
+    `${member.id} ／ ${member.plan === 'monthly' ? '月額' : 'ドロップイン'} ／ ${member.rank}` +
+    (currentVisitId ? ' 【滞在中】' : '');
+
+  document.getElementById('btnEnter').disabled = !!currentVisitId;
+  document.getElementById('btnExit').disabled = !currentVisitId;
+  document.getElementById('memberPanel').style.display = 'block';
+  document.getElementById('actionResult').textContent = '';
+}
+
+async function recordEnter() {
+  if (!currentMember) return;
+  const now = new Date();
+  const { data, error } = await sb.from('visits').insert({
+    member_id: currentMember.id,
+    date: now.toISOString().split('T')[0],
+    enter_time: now.toTimeString().split(' ')[0]
+  }).select().single();
+
+  if (error) { document.getElementById('actionResult').textContent = 'エラー: ' + error.message; return; }
+  currentVisitId = data.id;
+  document.getElementById('btnEnter').disabled = true;
+  document.getElementById('btnExit').disabled = false;
+  document.getElementById('actionResult').innerHTML = '<span style="color:#2e7d32">✅ 入室記録しました</span>';
+  document.getElementById('qrInput').value = '';
+  loadTodayData();
+}
+
+async function recordExit() {
+  if (!currentVisitId) return;
+  const now = new Date();
+  const exitTime = now.toTimeString().split(' ')[0];
+
+  // 滞在時間計算のため入室時刻取得
+  const { data: visit } = await sb.from('visits').select('enter_time').eq('id', currentVisitId).single();
+  let stayMinutes = null;
+  let seatFee = 0;
+
+  if (visit?.enter_time) {
+    const [eh, em, es] = visit.enter_time.split(':').map(Number);
+    const [xh, xm] = exitTime.split(':').map(Number);
+    stayMinutes = (xh * 60 + xm) - (eh * 60 + em);
+    // ドロップイン 30分220円
+    if (currentMember.plan === 'dropin') {
+      seatFee = Math.ceil(stayMinutes / 30) * 220;
+    }
+  }
+
+  const { error } = await sb.from('visits').update({
+    exit_time: exitTime,
+    stay_minutes: stayMinutes,
+    seat_fee: seatFee,
+    total_yen: seatFee
+  }).eq('id', currentVisitId);
+
+  if (error) { document.getElementById('actionResult').textContent = 'エラー: ' + error.message; return; }
+
+  currentVisitId = null;
+  document.getElementById('btnEnter').disabled = false;
+  document.getElementById('btnExit').disabled = true;
+  document.getElementById('actionResult').innerHTML =
+    `<span style="color:#1565c0">✅ 退室記録 ${stayMinutes}分 ¥${seatFee.toLocaleString()}</span>`;
+  document.getElementById('qrInput').value = '';
+  document.getElementById('memberPanel').style.display = 'none';
+  loadTodayData();
+}
+
+async function loadTodayData() {
+  const today = new Date().toISOString().split('T')[0];
+  const { data: visits } = await sb.from('visits')
+    .select('*, members(name)')
+    .eq('date', today)
+    .order('enter_time', { ascending: false });
+
+  if (!visits) return;
+
+  const inCount = visits.filter(v => !v.exit_time).length;
+  const totalSales = visits.reduce((s, v) => s + (v.total_yen || 0), 0);
+  document.getElementById('statIn').textContent = inCount;
+  document.getElementById('statToday').textContent = visits.length;
+  document.getElementById('statSales').textContent = '¥' + totalSales.toLocaleString();
+  document.getElementById('todayCount').textContent = visits.length;
+
+  document.getElementById('todayVisitList').innerHTML = visits.length ? visits.map(v => `
+    <div class="visit-row">
+      <div>
+        <div class="member-name">${v.members?.name || v.member_id}</div>
+        <div class="time">${v.enter_time?.slice(0,5)} 〜 ${v.exit_time?.slice(0,5) || '—'}</div>
+      </div>
+      <div>${v.stay_minutes != null ? v.stay_minutes + '分' : '—'}</div>
+      <div>¥${(v.total_yen || 0).toLocaleString()}</div>
+      <div><span class="status-badge ${v.exit_time ? 'status-out' : 'status-in'}">${v.exit_time ? '退室' : '滞在中'}</span></div>
+    </div>
+  `).join('') : '<div class="empty">本日の来訪はありません</div>';
+}
+
+async function loadOrders() {
+  // 本日の未紐付け注文（visit_idがnullのもの）
+  const today = new Date().toISOString().split('T')[0];
+  const { data: orders } = await sb.from('order_items')
+    .select('*, members(name)')
+    .gte('ordered_at', today + 'T00:00:00')
+    .order('ordered_at', { ascending: false });
+
+  document.getElementById('orderList').innerHTML = orders?.length ? orders.map(o => `
+    <div class="order-row">
+      <div>
+        <div style="font-weight:600">${o.members?.name || o.member_id}</div>
+        <div style="font-size:12px;color:#888">${o.product_name} × ${o.qty} — ${new Date(o.ordered_at).toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      <div style="font-weight:700">¥${o.subtotal.toLocaleString()}</div>
+    </div>
+  `).join('') : '<div class="empty">未処理の注文はありません</div>';
+}
+
+async function loadMembers() {
+  const { data: members } = await sb.from('members').select('*').order('id');
+  document.getElementById('memberList').innerHTML = members?.length ? members.map(m => `
+    <div class="member-row">
+      <div>
+        <div class="id">${m.id}</div>
+        <div class="name">${m.name || '—'}</div>
+        <div class="email">${m.email || '—'}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <span class="plan-tag ${m.plan === 'monthly' ? 'plan-monthly' : 'plan-dropin'}">${m.plan === 'monthly' ? '月額' : 'ドロップイン'}</span>
+        <span style="font-size:11px;color:${m.active ? '#2e7d32' : '#d32f2f'}">${m.active ? '✓ 有効' : '× 無効'}</span>
+      </div>
+    </div>
+  `).join('') : '<div class="empty">会員がいません</div>';
+}
+
+function openAddMember() {
+  document.getElementById('addMemberModal').classList.add('open');
+  // 次のIDを自動入力（簡易）
+  const rows = document.querySelectorAll('.member-row .id');
+  if (rows.length) {
+    const lastId = rows[rows.length - 1].textContent;
+    const num = parseInt(lastId.replace('A-', '')) + 1;
+    document.getElementById('newMemberId').value = 'A-' + String(num).padStart(5, '0');
+  }
+}
+
+function closeModal() {
+  document.getElementById('addMemberModal').classList.remove('open');
+}
+
+async function saveMember() {
+  const id = document.getElementById('newMemberId').value.trim();
+  const name = document.getElementById('newMemberName').value.trim();
+  const email = document.getElementById('newMemberEmail').value.trim();
+  const plan = document.getElementById('newMemberPlan').value;
+  const rank = document.getElementById('newMemberRank').value;
+
+  if (!id || !name) { alert('会員IDと名前は必須です'); return; }
+
+  const { error } = await sb.from('members').insert({ id, name, email, plan, rank });
+  if (error) { alert('エラー: ' + error.message); return; }
+
+  closeModal();
+  loadMembers();
+}
+
+document.getElementById('btnLogout').addEventListener('click', async () => {
+  await sb.auth.signOut();
+  location.href = 'index.html';
+});
+
+init();
+</script>
+</body>
+</html>

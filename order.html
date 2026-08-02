@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>注文 — MIKOSHIYA</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+    background: #f0f0eb;
+    min-height: 100vh;
+    padding: 20px 16px 100px;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .site-name { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+  .page-title { font-size: 13px; color: #888; }
+
+  .section {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px;
+    max-width: 480px;
+    margin: 0 auto 16px;
+  }
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    letter-spacing: 0.1em;
+    margin-bottom: 14px;
+  }
+
+  /* 商品グリッド */
+  .product-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .product-card {
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+  }
+  .product-card:active { background: #f8f8f8; }
+  .product-card:hover { border-color: #0f3460; }
+  .product-emoji { font-size: 28px; margin-bottom: 6px; }
+  .product-name { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 2px; }
+  .product-desc { font-size: 11px; color: #aaa; margin-bottom: 6px; }
+  .product-price { font-size: 15px; font-weight: 700; color: #0f3460; }
+
+  /* カート */
+  .cart-empty { font-size: 13px; color: #bbb; text-align: center; padding: 16px 0; }
+  .cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .cart-item:last-child { border-bottom: none; }
+  .cart-item-name { font-size: 14px; color: #333; flex: 1; }
+  .qty-ctrl {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .qty-btn {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid #ddd;
+    background: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #333;
+  }
+  .qty-num { font-size: 15px; font-weight: 600; min-width: 20px; text-align: center; }
+  .cart-item-sub { font-size: 14px; font-weight: 600; min-width: 60px; text-align: right; }
+
+  .cart-total {
+    display: flex; justify-content: space-between;
+    padding: 14px 0 0;
+    font-size: 16px; font-weight: 700;
+    border-top: 2px solid #f0f0f0;
+    margin-top: 4px;
+  }
+
+  .btn-order {
+    width: 100%;
+    padding: 16px;
+    background: #0f3460;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.15s;
+  }
+  .btn-order:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-order:not(:disabled):hover { opacity: 0.9; }
+
+  /* 注文完了 */
+  .success-banner {
+    background: #e8f5e9;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    font-size: 14px;
+    color: #2e7d32;
+    margin-top: 8px;
+    display: none;
+  }
+
+  .nav-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #fff;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 10px;
+    color: #888;
+    text-decoration: none;
+    padding: 4px 16px;
+  }
+  .nav-item.active { color: #0f3460; }
+  .nav-item span { font-size: 20px; }
+</style>
+</head>
+<body>
+<div id="loading-overlay" style="position:fixed;inset:0;background:#f0f0eb;display:flex;align-items:center;justify-content:center;font-size:14px;color:#888;z-index:100">
+  読み込み中...
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <div>
+      <div class="site-name">MIKOSHIYA</div>
+      <div class="page-title">セルフ注文</div>
+    </div>
+  </header>
+
+  <!-- 商品一覧 -->
+  <div class="section">
+    <div class="section-title">ドリンク・サービス</div>
+    <div class="product-grid" id="productGrid">読み込み中...</div>
+  </div>
+
+  <!-- カート -->
+  <div class="section">
+    <div class="section-title">カート</div>
+    <div id="cartList"><div class="cart-empty">商品を選んでください</div></div>
+    <div class="cart-total" id="cartTotal" style="display:none">
+      <span>合計</span>
+      <span id="totalPrice">¥0</span>
+    </div>
+    <button class="btn-order" id="btnOrder" disabled>注文する</button>
+    <div class="success-banner" id="successBanner">✅ 注文を送信しました！スタッフにお声がけください</div>
+  </div>
+</div>
+
+<nav class="nav-bar">
+  <a href="member-card.html" class="nav-item">
+    <span>🪪</span>会員証
+  </a>
+  <a href="order.html" class="nav-item active">
+    <span>🛒</span>注文
+  </a>
+</nav>
+
+<script>
+const SUPABASE_URL = 'https://ashoqzwxgaovepclbawf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzaG9xend4Z2FvdmVwY2xiYXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTk2MTMsImV4cCI6MjEwMTI3NTYxM30.Ke1Fa8MSTwj3OFH5mrh2ViPFCq4GUpYQh5vegyGbMLQ';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let cart = {}; // { sku: { product, qty } }
+let member = null;
+let products = [];
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { location.href = 'index.html'; return; }
+
+  // 会員情報取得
+  const { data: m } = await sb.from('members').select('*').eq('email', session.user.email).single();
+  member = m;
+
+  // 商品取得
+  const { data: prods } = await sb.from('products').select('*').eq('active', true).order('category');
+  products = prods || [];
+
+  renderProducts();
+
+  document.getElementById('loading-overlay').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+
+function renderProducts() {
+  const grid = document.getElementById('productGrid');
+  if (!products.length) { grid.textContent = '商品がありません'; return; }
+
+  grid.innerHTML = products.map(p => `
+    <div class="product-card" onclick="addToCart('${p.sku}')">
+      <div class="product-emoji">${p.emoji || '📦'}</div>
+      <div class="product-name">${p.name}</div>
+      <div class="product-desc">${p.description || ''}</div>
+      <div class="product-price">¥${p.price.toLocaleString()}</div>
+    </div>
+  `).join('');
+}
+
+function addToCart(sku) {
+  const product = products.find(p => p.sku === sku);
+  if (!product) return;
+  if (!cart[sku]) cart[sku] = { product, qty: 0 };
+  cart[sku].qty++;
+  renderCart();
+}
+
+function changeQty(sku, delta) {
+  if (!cart[sku]) return;
+  cart[sku].qty += delta;
+  if (cart[sku].qty <= 0) delete cart[sku];
+  renderCart();
+}
+
+function renderCart() {
+  const cartList = document.getElementById('cartList');
+  const items = Object.values(cart);
+
+  if (!items.length) {
+    cartList.innerHTML = '<div class="cart-empty">商品を選んでください</div>';
+    document.getElementById('cartTotal').style.display = 'none';
+    document.getElementById('btnOrder').disabled = true;
+    return;
+  }
+
+  cartList.innerHTML = items.map(({ product: p, qty }) => `
+    <div class="cart-item">
+      <div class="cart-item-name">${p.emoji || ''} ${p.name}</div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty('${p.sku}', -1)">−</button>
+        <div class="qty-num">${qty}</div>
+        <button class="qty-btn" onclick="changeQty('${p.sku}', 1)">＋</button>
+      </div>
+      <div class="cart-item-sub">¥${(p.price * qty).toLocaleString()}</div>
+    </div>
+  `).join('');
+
+  const total = items.reduce((s, { product: p, qty }) => s + p.price * qty, 0);
+  document.getElementById('totalPrice').textContent = '¥' + total.toLocaleString();
+  document.getElementById('cartTotal').style.display = 'flex';
+  document.getElementById('btnOrder').disabled = false;
+}
+
+document.getElementById('btnOrder').addEventListener('click', async () => {
+  const btn = document.getElementById('btnOrder');
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+
+  const items = Object.values(cart);
+  const memberId = member?.id || 'GUEST';
+  const orderNum = 'ORD-' + Date.now();
+
+  const rows = items.map(({ product: p, qty }) => ({
+    member_id: memberId,
+    sku: p.sku,
+    product_name: p.name,
+    qty,
+    unit_price: p.price,
+    subtotal: p.price * qty,
+    order_num: orderNum
+  }));
+
+  const { error } = await sb.from('order_items').insert(rows);
+
+  if (error) {
+    alert('エラー: ' + error.message);
+    btn.disabled = false;
+    btn.textContent = '注文する';
+    return;
+  }
+
+  cart = {};
+  renderCart();
+  btn.textContent = '注文する';
+  document.getElementById('successBanner').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('successBanner').style.display = 'none';
+  }, 4000);
+});
+
+init();
+</script>
+</body>
+</html>
