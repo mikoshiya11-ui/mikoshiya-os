@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIKOSHIYA — ログイン</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+    background: #f5f5f0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 48px 40px;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 2px 24px rgba(0,0,0,0.08);
+  }
+  .logo {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 40px;
+  }
+  .btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 20px;
+    border: 1.5px solid #dadce0;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    color: #3c4043;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+    text-decoration: none;
+  }
+  .btn-google:hover {
+    background: #f8f8f8;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .btn-google svg { flex-shrink: 0; }
+  .loading {
+    margin-top: 24px;
+    font-size: 13px;
+    color: #888;
+    display: none;
+  }
+  .error-msg {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #d93025;
+    display: none;
+  }
+  .version { margin-top: 40px; font-size: 11px; color: #ccc; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">MIKOSHIYA</div>
+  <div class="subtitle">コワーキングスペース 会員ポータル</div>
+
+  <button class="btn-google" id="btnGoogle">
+    <svg width="18" height="18" viewBox="0 0 18 18">
+      <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+      <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+      <path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/>
+      <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"/>
+    </svg>
+    Googleでログイン
+  </button>
+
+  <div class="loading" id="loading">ログイン処理中...</div>
+  <div class="error-msg" id="errorMsg"></div>
+  <div class="version">MIKOSHIYA OS v1.0</div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://ashoqzwxgaovepclbawf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzaG9xend4Z2FvdmVwY2xiYXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTk2MTMsImV4cCI6MjEwMTI3NTYxM30.Ke1Fa8MSTwj3OFH5mrh2ViPFCq4GUpYQh5vegyGbMLQ';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) redirect(session.user);
+})();
+
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    redirect(session.user);
+  }
+});
+
+async function redirect(user) {
+  const { data: member } = await sb
+    .from('members')
+    .select('rank, active')
+    .eq('email', user.email)
+    .single();
+
+  if (member && (member.rank === 'スタッフ' || member.rank === 'オーナー')) {
+    location.href = 'staff.html';
+  } else {
+    location.href = 'member-card.html';
+  }
+}
+
+document.getElementById('btnGoogle').addEventListener('click', async () => {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('errorMsg').style.display = 'none';
+
+  const redirectTo = location.origin + location.pathname.replace('index.html', '') + 'index.html';
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo }
+  });
+
+  if (error) {
+    document.getElementById('loading').style.display = 'none';
+    const em = document.getElementById('errorMsg');
+    em.textContent = 'エラー: ' + error.message;
+    em.style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>
