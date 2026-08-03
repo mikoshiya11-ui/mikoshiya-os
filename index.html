@@ -149,12 +149,11 @@ async function redirect(user) {
   showLoading('ランク確認中...');
 
   try {
-    const provider = user.app_metadata?.provider;
+    const isLine = user.user_metadata?.provider === 'line';
     let member, error;
 
-    if (provider === 'custom:line') {
-      const lineIdentity = user.identities?.find(i => i.provider === 'custom:line');
-      const lineId = lineIdentity?.id || user.user_metadata?.sub;
+    if (isLine) {
+      const lineId = user.user_metadata?.sub;
       console.log('[MIKOSHIYA] LINE login, lineId:', lineId);
       ({ data: member, error } = await sb
         .from('members')
@@ -169,7 +168,7 @@ async function redirect(user) {
         .maybeSingle());
     }
 
-    console.log('[MIKOSHIYA] provider:', provider, 'email:', user.email, 'member:', member, 'error:', error);
+    console.log('[MIKOSHIYA] isLine:', isLine, 'email:', user.email, 'member:', member, 'error:', error);
 
     if (member && (member.rank === 'スタッフ' || member.rank === 'オーナー')) {
       showLoading('スタッフページへ移動中...');
@@ -211,22 +210,18 @@ document.getElementById('btnGoogle').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('btnLine').addEventListener('click', async () => {
-  showLoading('ログイン処理中...');
+document.getElementById('btnLine').addEventListener('click', () => {
+  showLoading('LINEへ移動中...');
   document.getElementById('errorMsg').style.display = 'none';
 
-  const base = location.origin + location.pathname.replace(/\/[^/]*$/, '/');
-  const redirectTo = base + 'index.html';
-  console.log('[MIKOSHIYA] LINE redirectTo:', redirectTo);
-
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'custom:line',
-    options: { redirectTo }
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: '2009333479',
+    redirect_uri: 'https://ashoqzwxgaovepclbawf.supabase.co/functions/v1/line-callback',
+    state: Math.random().toString(36).slice(2),
+    scope: 'openid profile'
   });
-
-  if (error) {
-    showError('エラー: ' + error.message);
-  }
+  location.href = 'https://access.line.me/oauth2/v2.1/authorize?' + params.toString();
 });
 </script>
 </body>
