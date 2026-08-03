@@ -221,29 +221,31 @@ async function init() {
   if (!session) { location.href = 'index.html'; return; }
 
   const user = session.user;
+  const provider = user.app_metadata?.provider;
+  const isLine = provider === 'custom:line';
+  const lineIdentity = user.identities?.find(i => i.provider === 'custom:line');
+  const lineId = lineIdentity?.id || user.user_metadata?.sub;
 
-  // members テーブルから取得
-  const { data: member, error } = await sb
-    .from('members')
-    .select('*')
-    .eq('email', user.email)
-    .single();
+  // members テーブルから取得（LINEログインはline_id、それ以外はemailで照合）
+  const { data: member, error } = isLine
+    ? await sb.from('members').select('*').eq('line_id', lineId).maybeSingle()
+    : await sb.from('members').select('*').eq('email', user.email).maybeSingle();
 
   document.getElementById('loading-overlay').style.display = 'none';
   document.getElementById('app').style.display = 'block';
 
   if (!member) {
     // 未登録会員
-    document.getElementById('memberName').textContent = user.user_metadata?.full_name || user.email;
+    document.getElementById('memberName').textContent = user.user_metadata?.name || user.user_metadata?.full_name || user.email || 'ゲスト';
     document.getElementById('memberId').textContent = '（未登録 — スタッフへお声がけください）';
     document.getElementById('memberPlan').textContent = '—';
-    // QRに email を入れる
-    new QRCode(document.getElementById('qrCanvas'), { text: user.email, width: 128, height: 128 });
+    // QRに識別子を入れる（LINEはlineId、それ以外はemail）
+    new QRCode(document.getElementById('qrCanvas'), { text: isLine ? (lineId || 'unknown') : user.email, width: 128, height: 128 });
     return;
   }
 
   // 表示
-  document.getElementById('memberName').textContent = member.name || user.user_metadata?.full_name || '—';
+  document.getElementById('memberName').textContent = member.name || user.user_metadata?.full_name || user.user_metadata?.name || '—';
   document.getElementById('memberId').textContent = member.id;
   document.getElementById('memberPlan').textContent = member.plan === 'monthly' ? '月額プラン' : 'ドロップイン';
 
