@@ -58,6 +58,26 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   }
   .btn-google svg { flex-shrink: 0; }
+  .btn-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    background: #06C755;
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    text-decoration: none;
+    margin-top: 12px;
+  }
+  .btn-line:hover { opacity: 0.9; }
+  .btn-line svg { flex-shrink: 0; }
   .loading {
     margin-top: 24px;
     font-size: 13px;
@@ -86,6 +106,13 @@
       <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"/>
     </svg>
     Googleでログイン
+  </button>
+
+  <button class="btn-line" id="btnLine">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2C6.477 2 2 5.85 2 10.5c0 4.16 3.51 7.65 8.26 8.35.32.07.76.21.87.49.1.25.06.65.03.9l-.14.87c-.04.25-.2 1 .87.55 1.07-.46 5.77-3.4 7.87-5.83C21.15 13.9 22 12.3 22 10.5 22 5.85 17.523 2 12 2z" fill="#fff"/>
+    </svg>
+    LINEでログイン
   </button>
 
   <div class="loading" id="loading">ログイン処理中...</div>
@@ -122,13 +149,27 @@ async function redirect(user) {
   showLoading('ランク確認中...');
 
   try {
-    const { data: member, error } = await sb
-      .from('members')
-      .select('rank, active')
-      .eq('email', user.email)
-      .maybeSingle();
+    const provider = user.app_metadata?.provider;
+    let member, error;
 
-    console.log('[MIKOSHIYA] email:', user.email, 'member:', member, 'error:', error);
+    if (provider === 'custom:line') {
+      const lineIdentity = user.identities?.find(i => i.provider === 'custom:line');
+      const lineId = lineIdentity?.id || user.user_metadata?.sub;
+      console.log('[MIKOSHIYA] LINE login, lineId:', lineId);
+      ({ data: member, error } = await sb
+        .from('members')
+        .select('rank, active')
+        .eq('line_id', lineId)
+        .maybeSingle());
+    } else {
+      ({ data: member, error } = await sb
+        .from('members')
+        .select('rank, active')
+        .eq('email', user.email)
+        .maybeSingle());
+    }
+
+    console.log('[MIKOSHIYA] provider:', provider, 'email:', user.email, 'member:', member, 'error:', error);
 
     if (member && (member.rank === 'スタッフ' || member.rank === 'オーナー')) {
       showLoading('スタッフページへ移動中...');
@@ -162,6 +203,24 @@ document.getElementById('btnGoogle').addEventListener('click', async () => {
 
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
+    options: { redirectTo }
+  });
+
+  if (error) {
+    showError('エラー: ' + error.message);
+  }
+});
+
+document.getElementById('btnLine').addEventListener('click', async () => {
+  showLoading('ログイン処理中...');
+  document.getElementById('errorMsg').style.display = 'none';
+
+  const base = location.origin + location.pathname.replace(/\/[^/]*$/, '/');
+  const redirectTo = base + 'index.html';
+  console.log('[MIKOSHIYA] LINE redirectTo:', redirectTo);
+
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'custom:line',
     options: { redirectTo }
   });
 
