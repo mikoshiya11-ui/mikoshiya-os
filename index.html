@@ -100,46 +100,73 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-(async () => {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) redirect(session.user);
-})();
+let redirecting = false;
 
+function showLoading(msg) {
+  const el = document.getElementById('loading');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function showError(msg) {
+  document.getElementById('loading').style.display = 'none';
+  const em = document.getElementById('errorMsg');
+  em.textContent = msg;
+  em.style.display = 'block';
+}
+
+async function redirect(user) {
+  if (redirecting) return;
+  redirecting = true;
+
+  showLoading('ランク確認中...');
+
+  try {
+    const { data: member, error } = await sb
+      .from('members')
+      .select('rank, active')
+      .eq('email', user.email)
+      .maybeSingle();
+
+    console.log('[MIKOSHIYA] email:', user.email, 'member:', member, 'error:', error);
+
+    if (member && (member.rank === 'スタッフ' || member.rank === 'オーナー')) {
+      showLoading('スタッフページへ移動中...');
+      location.href = 'staff.html';
+    } else {
+      showLoading('会員ページへ移動中...');
+      location.href = 'member-card.html';
+    }
+  } catch (e) {
+    console.error('[MIKOSHIYA] redirect error:', e);
+    redirecting = false;
+    showError('エラー: ' + e.message);
+  }
+}
+
+// onAuthStateChange だけで統一（INITIAL_SESSION + SIGNED_IN をカバー）
 sb.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session) {
+  console.log('[MIKOSHIYA] auth event:', event, 'email:', session?.user?.email);
+  if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
     redirect(session.user);
   }
 });
 
-async function redirect(user) {
-  const { data: member } = await sb
-    .from('members')
-    .select('rank, active')
-    .eq('email', user.email)
-    .single();
-
-  if (member && (member.rank === 'スタッフ' || member.rank === 'オーナー')) {
-    location.href = 'staff.html';
-  } else {
-    location.href = 'member-card.html';
-  }
-}
-
 document.getElementById('btnGoogle').addEventListener('click', async () => {
-  document.getElementById('loading').style.display = 'block';
+  showLoading('ログイン処理中...');
   document.getElementById('errorMsg').style.display = 'none';
 
-  const redirectTo = location.origin + location.pathname.replace('index.html', '') + 'index.html';
+  const base = location.origin + location.pathname.replace(/\/[^/]*$/, '/');
+  const redirectTo = base + 'index.html';
+  console.log('[MIKOSHIYA] redirectTo:', redirectTo);
+
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo }
   });
 
   if (error) {
-    document.getElementById('loading').style.display = 'none';
-    const em = document.getElementById('errorMsg');
-    em.textContent = 'エラー: ' + error.message;
-    em.style.display = 'block';
+    showError('エラー: ' + error.message);
   }
 });
 </script>
