@@ -218,7 +218,7 @@ document.getElementById('btnLine').addEventListener('click', () => {
     response_type: 'code',
     client_id: '2009333479',
     redirect_uri: 'https://ashoqzwxgaovepclbawf.supabase.co/functions/v1/line-callback',
-    state: Math.random().toString(36).slice(2),
+    state: 'index.html',
     scope: 'openid profile'
   });
   location.href = 'https://access.line.me/oauth2/v2.1/authorize?' + params.toString();
