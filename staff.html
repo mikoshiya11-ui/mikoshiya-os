@@ -273,7 +273,10 @@
       <div class="title">🏠 スタッフルーム</div>
       <div class="date" id="todayDate">—</div>
     </div>
-    <button class="btn-sm btn-logout" id="btnLogout">ログアウト</button>
+    <div style="display:flex;gap:8px">
+      <a href="member-card.html" class="btn-sm btn-logout" style="text-decoration:none;display:inline-block">🪪 会員証</a>
+      <button class="btn-sm btn-logout" id="btnLogout">ログアウト</button>
+    </div>
   </div>
 
   <div class="tabs">
@@ -360,6 +363,7 @@
       <h3 style="margin:0" id="detailTitle">会員詳細</h3>
       <button class="btn-cancel" onclick="closeDetailModal()" style="padding:6px 10px">✕</button>
     </div>
+    <!-- 表示モード -->
     <div id="detailView">
       <div class="detail-field"><label>会員ID</label><div class="val" id="dId">—</div></div>
       <div class="detail-field"><label>名前</label><div class="val" id="dName">—</div></div>
@@ -375,6 +379,7 @@
         <button class="btn-primary" onclick="switchToEdit()">編集</button>
       </div>
     </div>
+    <!-- 編集モード -->
     <div id="detailEdit" style="display:none">
       <div class="form-group"><label>名前</label><input type="text" id="editName"></div>
       <div class="form-group"><label>メール (Googleアカウント)</label><input type="email" id="editEmail"></div>
@@ -462,6 +467,7 @@ async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { location.href = 'index.html'; return; }
 
+  // スタッフ権限チェック
   const { data: me } = await sb.from('members').select('rank').eq('email', session.user.email).single();
   if (!me || !['スタッフ', 'オーナー'].includes(me.rank)) {
     alert('スタッフ専用ページです');
@@ -476,6 +482,7 @@ async function init() {
   document.getElementById('todayDate').textContent =
     today.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 
+  // Enterキーでlookup
   document.getElementById('qrInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') lookupMember();
   });
@@ -505,6 +512,8 @@ async function lookupMember() {
   }
 
   currentMember = member;
+
+  // 今日のアクティブな visit を確認
   const today = new Date().toISOString().split('T')[0];
   const { data: visits } = await sb.from('visits')
     .select('*').eq('member_id', id).eq('date', today).is('exit_time', null);
@@ -544,14 +553,16 @@ async function recordExit() {
   const now = new Date();
   const exitTime = now.toTimeString().split(' ')[0];
 
+  // 滞在時間計算のため入室時刻取得
   const { data: visit } = await sb.from('visits').select('enter_time').eq('id', currentVisitId).single();
   let stayMinutes = null;
   let seatFee = 0;
 
   if (visit?.enter_time) {
-    const [eh, em] = visit.enter_time.split(':').map(Number);
+    const [eh, em, es] = visit.enter_time.split(':').map(Number);
     const [xh, xm] = exitTime.split(':').map(Number);
     stayMinutes = (xh * 60 + xm) - (eh * 60 + em);
+    // ドロップイン 30分220円
     if (currentMember.plan === 'dropin') {
       seatFee = Math.ceil(stayMinutes / 30) * 220;
     }
@@ -606,6 +617,7 @@ async function loadTodayData() {
 }
 
 async function loadOrders() {
+  // 本日の未紐付け注文（visit_idがnullのもの）
   const today = new Date().toISOString().split('T')[0];
   const { data: orders } = await sb.from('order_items')
     .select('*, members(name)')
@@ -736,6 +748,7 @@ async function saveMemberEdit() {
 
 function openAddMember() {
   document.getElementById('addMemberModal').classList.add('open');
+  // 次のIDを自動入力（簡易）
   const rows = document.querySelectorAll('.member-row .id');
   if (rows.length) {
     const lastId = rows[rows.length - 1].textContent;
