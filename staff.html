@@ -467,8 +467,14 @@ async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { location.href = 'index.html'; return; }
 
-  // スタッフ権限チェック
-  const { data: me } = await sb.from('members').select('rank').eq('email', session.user.email).single();
+  // スタッフ権限チェック（LINEログインはline_id、それ以外はemailで照合）
+  const provider = session.user.app_metadata?.provider;
+  const isLine = provider === 'custom:line';
+  const lineIdentity = session.user.identities?.find(i => i.provider === 'custom:line');
+  const lineId = lineIdentity?.id || session.user.user_metadata?.sub;
+  const { data: me } = isLine
+    ? await sb.from('members').select('rank').eq('line_id', lineId).maybeSingle()
+    : await sb.from('members').select('rank').eq('email', session.user.email).maybeSingle();
   if (!me || !['スタッフ', 'オーナー'].includes(me.rank)) {
     alert('スタッフ専用ページです');
     location.href = 'member-card.html';
