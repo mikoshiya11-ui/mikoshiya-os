@@ -156,7 +156,10 @@
 <div id="app" style="display:none">
   <header>
     <div class="site-name">MIKOSHIYA</div>
-    <button class="btn-logout" id="btnLogout">ログアウト</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <a href="staff.html" id="btnStaffRoom" style="display:none;font-size:12px;color:#0f3460;text-decoration:none;background:#e8f0fe;padding:4px 10px;border-radius:8px;font-weight:600">🏠 スタッフルーム</a>
+      <button class="btn-logout" id="btnLogout">ログアウト</button>
+    </div>
   </header>
 
   <!-- 会員証 -->
@@ -243,6 +246,11 @@ async function init() {
   document.getElementById('memberName').textContent = member.name || user.user_metadata?.full_name || '—';
   document.getElementById('memberId').textContent = member.id;
   document.getElementById('memberPlan').textContent = member.plan === 'monthly' ? '月額プラン' : 'ドロップイン';
+
+  // スタッフ・オーナーは戻るボタンを表示
+  if (['スタッフ', 'オーナー'].includes(member.rank)) {
+    document.getElementById('btnStaffRoom').style.display = 'inline-block';
+  }
 
   // QRコード生成（会員ID）
   new QRCode(document.getElementById('qrCanvas'), { text: member.id, width: 128, height: 128 });
