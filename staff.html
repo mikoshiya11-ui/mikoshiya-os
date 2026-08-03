@@ -176,13 +176,29 @@
   .stat-label { font-size: 11px; color: #888; margin-top: 2px; }
 
   /* 会員一覧 */
+  .member-search {
+    width: 100%; padding: 10px 12px;
+    border: 1.5px solid #eee; border-radius: 10px;
+    font-size: 14px; outline: none; margin-bottom: 12px;
+  }
+  .member-search:focus { border-color: #0f3460; }
+  .member-filter-row {
+    display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .filter-btn {
+    font-size: 11px; padding: 4px 10px; border-radius: 20px;
+    border: 1.5px solid #ddd; background: #fff; cursor: pointer; color: #555;
+  }
+  .filter-btn.active { background: #0f3460; color: #fff; border-color: #0f3460; }
   .member-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 12px 0;
     border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
   }
+  .member-row:hover { background: #fafafa; }
   .member-row:last-child { border-bottom: none; }
   .member-row .id { font-size: 11px; color: #aaa; }
   .member-row .name { font-size: 14px; font-weight: 600; }
@@ -193,6 +209,25 @@
   }
   .plan-monthly { background: #e3f2fd; color: #1565c0; }
   .plan-dropin { background: #f5f5f5; color: #555; }
+  .rank-tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 20px;
+  }
+  .rank-owner { background: #fff3e0; color: #e65100; }
+  .rank-staff { background: #e8f5e9; color: #2e7d32; }
+  .rank-special { background: #fce4ec; color: #c62828; }
+  .rank-general { background: #f5f5f5; color: #555; }
+  .line-dot {
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; margin-right: 4px;
+  }
+  .line-yes { background: #06c755; }
+  .line-no { background: #ddd; }
+
+  /* 会員詳細モーダル */
+  .detail-field { margin-bottom: 8px; }
+  .detail-field label { font-size: 11px; color: #888; display: block; margin-bottom: 2px; }
+  .detail-field .val { font-size: 14px; color: #222; }
+  .detail-sep { border: none; border-top: 1px solid #eee; margin: 12px 0; }
 
   .empty { font-size: 13px; color: #bbb; text-align: center; padding: 20px 0; }
 
@@ -301,11 +336,76 @@
   <!-- ④ 会員タブ -->
   <div class="tab-content" id="tab-members">
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div class="card-title" style="margin-bottom:0">会員一覧</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="card-title" style="margin-bottom:0">会員一覧 (<span id="memberCount">0</span>人)</div>
         <button class="btn-primary btn-sm" onclick="openAddMember()" style="font-size:12px;padding:6px 12px">＋追加</button>
       </div>
+      <input type="text" class="member-search" id="memberSearch" placeholder="名前・ID・LINEで検索..." oninput="filterMembers()">
+      <div class="member-filter-row">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">全員</button>
+        <button class="filter-btn" data-filter="特別会員" onclick="setFilter('特別会員',this)">特別会員</button>
+        <button class="filter-btn" data-filter="一般" onclick="setFilter('一般',this)">一般</button>
+        <button class="filter-btn" data-filter="line" onclick="setFilter('line',this)">LINE有</button>
+        <button class="filter-btn" data-filter="noline" onclick="setFilter('noline',this)">LINE無</button>
+      </div>
       <div id="memberList"><div class="empty">読み込み中...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 会員詳細モーダル -->
+<div class="modal-backdrop" id="memberDetailModal">
+  <div class="modal" style="max-width:420px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="margin:0" id="detailTitle">会員詳細</h3>
+      <button class="btn-cancel" onclick="closeDetailModal()" style="padding:6px 10px">✕</button>
+    </div>
+    <div id="detailView">
+      <div class="detail-field"><label>会員ID</label><div class="val" id="dId">—</div></div>
+      <div class="detail-field"><label>名前</label><div class="val" id="dName">—</div></div>
+      <div class="detail-field"><label>メール</label><div class="val" id="dEmail">—</div></div>
+      <div class="detail-field"><label>ランク</label><div class="val" id="dRank">—</div></div>
+      <div class="detail-field"><label>プラン</label><div class="val" id="dPlan">—</div></div>
+      <div class="detail-field"><label>LINE表示名</label><div class="val" id="dLineName">—</div></div>
+      <div class="detail-field"><label>LINE ID</label><div class="val" id="dLineId" style="font-size:11px;word-break:break-all;color:#888">—</div></div>
+      <div class="detail-field"><label>ステータス</label><div class="val" id="dActive">—</div></div>
+      <hr class="detail-sep">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn-cancel" onclick="closeDetailModal()">閉じる</button>
+        <button class="btn-primary" onclick="switchToEdit()">編集</button>
+      </div>
+    </div>
+    <div id="detailEdit" style="display:none">
+      <div class="form-group"><label>名前</label><input type="text" id="editName"></div>
+      <div class="form-group"><label>メール (Googleアカウント)</label><input type="email" id="editEmail"></div>
+      <div class="form-group">
+        <label>ランク</label>
+        <select id="editRank">
+          <option value="一般">一般</option>
+          <option value="特別会員">特別会員</option>
+          <option value="スタッフ">スタッフ</option>
+          <option value="オーナー">オーナー</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>プラン</label>
+        <select id="editPlan">
+          <option value="dropin">ドロップイン</option>
+          <option value="monthly">月額</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>ステータス</label>
+        <select id="editActive">
+          <option value="true">有効</option>
+          <option value="false">無効</option>
+        </select>
+      </div>
+      <hr class="detail-sep">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn-cancel" onclick="switchToView()">キャンセル</button>
+        <button class="btn-primary" onclick="saveMemberEdit()">保存</button>
+      </div>
     </div>
   </div>
 </div>
@@ -362,7 +462,6 @@ async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { location.href = 'index.html'; return; }
 
-  // スタッフ権限チェック
   const { data: me } = await sb.from('members').select('rank').eq('email', session.user.email).single();
   if (!me || !['スタッフ', 'オーナー'].includes(me.rank)) {
     alert('スタッフ専用ページです');
@@ -377,7 +476,6 @@ async function init() {
   document.getElementById('todayDate').textContent =
     today.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 
-  // Enterキーでlookup
   document.getElementById('qrInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') lookupMember();
   });
@@ -407,8 +505,6 @@ async function lookupMember() {
   }
 
   currentMember = member;
-
-  // 今日のアクティブな visit を確認
   const today = new Date().toISOString().split('T')[0];
   const { data: visits } = await sb.from('visits')
     .select('*').eq('member_id', id).eq('date', today).is('exit_time', null);
@@ -448,16 +544,14 @@ async function recordExit() {
   const now = new Date();
   const exitTime = now.toTimeString().split(' ')[0];
 
-  // 滞在時間計算のため入室時刻取得
   const { data: visit } = await sb.from('visits').select('enter_time').eq('id', currentVisitId).single();
   let stayMinutes = null;
   let seatFee = 0;
 
   if (visit?.enter_time) {
-    const [eh, em, es] = visit.enter_time.split(':').map(Number);
+    const [eh, em] = visit.enter_time.split(':').map(Number);
     const [xh, xm] = exitTime.split(':').map(Number);
     stayMinutes = (xh * 60 + xm) - (eh * 60 + em);
-    // ドロップイン 30分220円
     if (currentMember.plan === 'dropin') {
       seatFee = Math.ceil(stayMinutes / 30) * 220;
     }
@@ -512,7 +606,6 @@ async function loadTodayData() {
 }
 
 async function loadOrders() {
-  // 本日の未紐付け注文（visit_idがnullのもの）
   const today = new Date().toISOString().split('T')[0];
   const { data: orders } = await sb.from('order_items')
     .select('*, members(name)')
@@ -530,26 +623,119 @@ async function loadOrders() {
   `).join('') : '<div class="empty">未処理の注文はありません</div>';
 }
 
+let allMembers = [];
+let currentFilter = 'all';
+let currentDetailId = null;
+
+function rankTagClass(rank) {
+  if (rank === 'オーナー') return 'rank-owner';
+  if (rank === 'スタッフ') return 'rank-staff';
+  if (rank === '特別会員') return 'rank-special';
+  return 'rank-general';
+}
+
 async function loadMembers() {
   const { data: members } = await sb.from('members').select('*').order('id');
-  document.getElementById('memberList').innerHTML = members?.length ? members.map(m => `
-    <div class="member-row">
+  allMembers = members || [];
+  document.getElementById('memberCount').textContent = allMembers.length;
+  renderMembers();
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMembers();
+}
+
+function filterMembers() { renderMembers(); }
+
+function renderMembers() {
+  const q = (document.getElementById('memberSearch')?.value || '').toLowerCase();
+  let list = allMembers.filter(m => {
+    if (currentFilter === '特別会員' && m.rank !== '特別会員') return false;
+    if (currentFilter === '一般' && m.rank !== '一般') return false;
+    if (currentFilter === 'line' && !m.line_id) return false;
+    if (currentFilter === 'noline' && m.line_id) return false;
+    if (q) {
+      const hay = ((m.id||'') + (m.name||'') + (m.line_display_name||'') + (m.email||'')).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('memberList').innerHTML = list.length ? list.map(m => `
+    <div class="member-row" onclick="openDetail('${m.id}')">
       <div>
         <div class="id">${m.id}</div>
-        <div class="name">${m.name || '—'}</div>
-        <div class="email">${m.email || '—'}</div>
+        <div class="name">${m.name || m.line_display_name || '—'}</div>
+        <div class="email" style="display:flex;align-items:center;gap:4px">
+          <span class="line-dot ${m.line_id ? 'line-yes' : 'line-no'}"></span>
+          <span>${m.line_id ? (m.line_display_name || 'LINE有') : (m.email || 'LINE無')}</span>
+        </div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-        <span class="plan-tag ${m.plan === 'monthly' ? 'plan-monthly' : 'plan-dropin'}">${m.plan === 'monthly' ? '月額' : 'ドロップイン'}</span>
+        <span class="rank-tag ${rankTagClass(m.rank)}">${m.rank || '一般'}</span>
         <span style="font-size:11px;color:${m.active ? '#2e7d32' : '#d32f2f'}">${m.active ? '✓ 有効' : '× 無効'}</span>
       </div>
     </div>
-  `).join('') : '<div class="empty">会員がいません</div>';
+  `).join('') : '<div class="empty">該当する会員がいません</div>';
+}
+
+function openDetail(id) {
+  const m = allMembers.find(x => x.id === id);
+  if (!m) return;
+  currentDetailId = id;
+  document.getElementById('dId').textContent = m.id;
+  document.getElementById('dName').textContent = m.name || '—';
+  document.getElementById('dEmail').textContent = m.email || '—';
+  document.getElementById('dRank').textContent = m.rank || '—';
+  document.getElementById('dPlan').textContent = m.plan === 'monthly' ? '月額' : 'ドロップイン';
+  document.getElementById('dLineName').textContent = m.line_display_name || '—';
+  document.getElementById('dLineId').textContent = m.line_id || '—';
+  document.getElementById('dActive').textContent = m.active ? '✓ 有効' : '× 無効';
+  document.getElementById('detailView').style.display = 'block';
+  document.getElementById('detailEdit').style.display = 'none';
+  document.getElementById('memberDetailModal').classList.add('open');
+}
+
+function closeDetailModal() {
+  document.getElementById('memberDetailModal').classList.remove('open');
+}
+
+function switchToEdit() {
+  const m = allMembers.find(x => x.id === currentDetailId);
+  if (!m) return;
+  document.getElementById('editName').value = m.name || '';
+  document.getElementById('editEmail').value = m.email || '';
+  document.getElementById('editRank').value = m.rank || '一般';
+  document.getElementById('editPlan').value = m.plan || 'dropin';
+  document.getElementById('editActive').value = m.active ? 'true' : 'false';
+  document.getElementById('detailView').style.display = 'none';
+  document.getElementById('detailEdit').style.display = 'block';
+}
+
+function switchToView() {
+  document.getElementById('detailView').style.display = 'block';
+  document.getElementById('detailEdit').style.display = 'none';
+}
+
+async function saveMemberEdit() {
+  const updates = {
+    name: document.getElementById('editName').value.trim() || null,
+    email: document.getElementById('editEmail').value.trim() || null,
+    rank: document.getElementById('editRank').value,
+    plan: document.getElementById('editPlan').value,
+    active: document.getElementById('editActive').value === 'true'
+  };
+  const { error } = await sb.from('members').update(updates).eq('id', currentDetailId);
+  if (error) { alert('エラー: ' + error.message); return; }
+  closeDetailModal();
+  loadMembers();
 }
 
 function openAddMember() {
   document.getElementById('addMemberModal').classList.add('open');
-  // 次のIDを自動入力（簡易）
   const rows = document.querySelectorAll('.member-row .id');
   if (rows.length) {
     const lastId = rows[rows.length - 1].textContent;
