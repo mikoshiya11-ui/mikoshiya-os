@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>会員証 — MIKOSHIYA</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -166,7 +166,7 @@
     <div class="member-id" id="memberId">—</div>
     <div class="member-plan" id="memberPlan">—</div>
     <div class="qr-area">
-      <canvas id="qrCanvas"></canvas>
+      <div id="qrCanvas"></div>
     </div>
     <div class="card-footer">入退室時にスタッフへ提示</div>
   </div>
@@ -235,7 +235,7 @@ async function init() {
     document.getElementById('memberId').textContent = '（未登録 — スタッフへお声がけください）';
     document.getElementById('memberPlan').textContent = '—';
     // QRに email を入れる
-    QRCode.toCanvas(document.getElementById('qrCanvas'), user.email, { width: 128 });
+    new QRCode(document.getElementById('qrCanvas'), { text: user.email, width: 128, height: 128 });
     return;
   }
 
@@ -245,7 +245,7 @@ async function init() {
   document.getElementById('memberPlan').textContent = member.plan === 'monthly' ? '月額プラン' : 'ドロップイン';
 
   // QRコード生成（会員ID）
-  QRCode.toCanvas(document.getElementById('qrCanvas'), member.id, { width: 128 });
+  new QRCode(document.getElementById('qrCanvas'), { text: member.id, width: 128, height: 128 });
 
   // 今月の来訪データ
   const now = new Date();
