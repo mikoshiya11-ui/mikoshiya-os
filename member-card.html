@@ -400,23 +400,23 @@
       <div class="mc-footer">退室時にスキャンして下さい</div>
     </div>
 
-    <!-- 今月の利用状況 -->
+    <!-- 本日の利用状況（Phase 6） -->
     <div class="usage-panel">
       <img class="up-bg" src="assets/panel_usage_status.png" alt="">
       <div class="up-header">
         <img src="assets/header_usage_status.png" alt="" style="position:absolute; inset:0; width:100%; height:100%;">
-        <span class="up-header-text" style="position:relative;">今月の利用状況</span>
+        <span class="up-header-text" style="position:relative;">本日の利用状況</span>
       </div>
       <div class="up-stats">
         <div class="up-stat">
-          <img src="assets/icon_visit.png" alt="">
-          <div class="up-num" id="statVisits">—</div>
-          <div class="up-label">来訪回数</div>
+          <img src="assets/icon_time.png" alt="">
+          <div class="up-num" id="statMinutes">—</div>
+          <div class="up-label">利用時間(分)</div>
         </div>
         <div class="up-stat">
-          <img src="assets/icon_time.png" alt="">
-          <div class="up-num" id="statHours">—</div>
-          <div class="up-label">利用時間(h)</div>
+          <img src="assets/icon_price.png" alt="">
+          <div class="up-num" id="statFee">—</div>
+          <div class="up-label">利用料金(¥)</div>
         </div>
         <div class="up-stat">
           <img src="assets/icon_price.png" alt="">
@@ -534,9 +534,11 @@ async function init() {
   // QRコード生成（会員ID・2倍サイズで生成しCSSで104pxに縮小＝レティナ対応）
   new QRCode(document.getElementById('qrCanvas'), { text: member.id, width: 192, height: 192 });
 
-  // 今月の来訪データ
+  // 今月の来訪データ（冒険の記録用。クエリ・表示ロジックはPhase 6でも変更なし）
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  // 「本日」の判定はcheckin.html / staff.htmlの日付記録方式（toISOString基準）に合わせる
+  const today = new Date().toISOString().split('T')[0];
 
   const { data: visits } = await sb
     .from('visits')
@@ -546,14 +548,7 @@ async function init() {
     .order('date', { ascending: false });
 
   if (visits && visits.length > 0) {
-    const totalMinutes = visits.reduce((s, v) => s + (v.stay_minutes || 0), 0);
-    const totalYen = visits.reduce((s, v) => s + (v.total_yen || 0), 0);
-
-    document.getElementById('statVisits').textContent = visits.length;
-    document.getElementById('statHours').textContent = (totalMinutes / 60).toFixed(1);
-    document.getElementById('statTotal').textContent = totalYen.toLocaleString();
-
-    // 最近5件
+    // 最近5件（冒険の記録。既存のまま）
     document.getElementById('visitList').innerHTML = visits.slice(0, 5).map(v => `
       <div class="visit-item">
         <div>
@@ -564,10 +559,61 @@ async function init() {
       </div>
     `).join('');
   } else {
-    document.getElementById('statVisits').textContent = '0';
-    document.getElementById('statHours').textContent = '0';
-    document.getElementById('statTotal').textContent = '0';
     document.getElementById('visitList').textContent = '今月の来訪はありません';
+  }
+
+  // ===== 本日の利用状況（Phase 6: 新規） =====
+  // 上で取得済みの月次visitsから本日分のみを抽出（冒険の記録の取得ロジックには手を加えない）
+  const todaysVisits = (visits || []).filter(v => v.date === today);
+  const activeVisit = todaysVisits.find(v => !v.exit_time);
+  const completedTodayVisits = todaysVisits.filter(v => v.exit_time);
+
+  // 滞在中セッションの経過分数（enter_timeはHH:MM:SS、staff.htmlのstayMinutes算出と同じ方式）
+  function calcElapsedMinutes(enterTimeStr) {
+    const nowT = new Date().toTimeString().split(' ')[0];
+    const [eh, em] = enterTimeStr.split(':').map(Number);
+    const [nh, nm] = nowT.split(':').map(Number);
+    return Math.max(0, (nh * 60 + nm) - (eh * 60 + em));
+  }
+
+  // 滞在中セッションの概算料金（staff.html Phase 5と同一の料金体系: 198円/30分・上限1,980円）
+  function estimateSeatFee(minutes) {
+    if (member.plan !== 'dropin') return 0;
+    const units = Math.ceil(minutes / 30);
+    return Math.min(units * 198, 1980);
+  }
+
+  async function renderTodayUsage() {
+    const completedMinutes = completedTodayVisits.reduce((s, v) => s + (v.stay_minutes || 0), 0);
+    const completedFee = completedTodayVisits.reduce((s, v) => s + (v.total_yen || 0), 0);
+
+    let minutes = completedMinutes;
+    let seatFee = completedFee;
+
+    if (activeVisit) {
+      const activeMinutes = calcElapsedMinutes(activeVisit.enter_time);
+      minutes += activeMinutes;
+      seatFee += estimateSeatFee(activeMinutes);
+    }
+
+    // 本日の注文（購入品）を合算
+    const { data: orders } = await sb
+      .from('order_items')
+      .select('subtotal')
+      .eq('member_id', member.id)
+      .gte('ordered_at', today + 'T00:00:00');
+    const purchaseTotal = (orders || []).reduce((s, o) => s + (o.subtotal || 0), 0);
+
+    document.getElementById('statMinutes').textContent = minutes;
+    document.getElementById('statFee').textContent = seatFee.toLocaleString();
+    document.getElementById('statTotal').textContent = (seatFee + purchaseTotal).toLocaleString();
+  }
+
+  await renderTodayUsage();
+
+  // 滞在中は経過時間・概算料金を1分ごとに更新
+  if (activeVisit) {
+    setInterval(renderTodayUsage, 60000);
   }
 
   requestAnimationFrame(applyScale);
