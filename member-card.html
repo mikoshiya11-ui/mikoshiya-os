@@ -33,11 +33,16 @@
       );
     background-attachment: fixed;
     min-height: 100vh;
-    overflow-x: auto;
+    overflow-x: hidden;
   }
-  .content-panel {
+  .content-scale-shell {
+    position: relative;
     width: min(var(--content-width), calc(100vw - 16px));
     margin-inline: auto;
+  }
+  .content-scale-inner {
+    width: var(--content-width);
+    transform-origin: top left;
   }
 
   /* ===== ヘッダー（topbar座標系） ===== */
@@ -101,7 +106,7 @@
     color: #f3d97b;
   }
 
-  .content { padding: 16px 0 20px; }
+  .content { padding: 16px 0 calc(var(--nav-height) + 16px); }
 
   /* ===== 会員証カード（main-card座標系: 404×555） ===== */
   .main-card {
@@ -242,7 +247,7 @@
     display: flex;
     flex-direction: column;
     width: var(--content-width);
-    margin: 0 auto calc(var(--nav-height) + 16px);
+    margin: 0 auto;
   }
   .hp-top {
     position: relative;
@@ -361,6 +366,8 @@
   </header>
 
   <div class="content">
+   <div class="content-scale-shell" id="scaleShell">
+    <div class="content-scale-inner" id="scaleInner">
     <!-- 会員証 -->
     <div class="main-card">
       <img class="mc-frame" src="assets/frame_main_card.png" alt="">
@@ -418,6 +425,8 @@
       </div>
       <div class="hp-bottom"></div>
     </div>
+    </div>
+   </div>
   </div>
 </div>
 
@@ -452,6 +461,20 @@ function fitOneLine(el, maxWidth, maxSize, minSize) {
   }
 }
 
+// Phase 9: レスポンシブ縮小（404px基準、404px未満の端末幅でのみ縮小。横スクロールなし）
+const CONTENT_BASE_WIDTH = 404;
+function applyScale() {
+  const shell = document.getElementById('scaleShell');
+  const inner = document.getElementById('scaleInner');
+  if (!shell || !inner) return;
+  const scale = Math.min(1, shell.clientWidth / CONTENT_BASE_WIDTH);
+  inner.style.transform = 'scale(' + scale + ')';
+  shell.style.height = (inner.offsetHeight * scale) + 'px';
+}
+window.addEventListener('resize', applyScale);
+window.addEventListener('orientationchange', applyScale);
+window.addEventListener('load', applyScale);
+
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { location.href = 'index.html'; return; }
@@ -478,6 +501,7 @@ async function init() {
     document.getElementById('memberPlan').textContent = '—';
     // QRに識別子を入れる（LINEはlineId、それ以外はemail）
     new QRCode(document.getElementById('qrCanvas'), { text: isLine ? (lineId || 'unknown') : user.email, width: 192, height: 192 });
+    requestAnimationFrame(applyScale);
     return;
   }
 
@@ -530,6 +554,8 @@ async function init() {
     document.getElementById('statTotal').textContent = '0';
     document.getElementById('visitList').textContent = '今月の来訪はありません';
   }
+
+  requestAnimationFrame(applyScale);
 }
 
 document.getElementById('btnLogout').addEventListener('click', async () => {
