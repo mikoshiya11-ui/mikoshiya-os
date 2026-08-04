@@ -291,7 +291,7 @@
     <div class="card">
       <div class="card-title">QRコード読み取り / 会員ID入力</div>
       <div class="qr-input-area">
-        <input type="text" class="qr-input" id="qrInput" placeholder="会員ID (例: A-00001)" autocomplete="off">
+        <input type="text" class="qr-input" id="qrInput" placeholder="会員ID (例: A-00001)" autocomplete="off" autofocus>
         <button class="btn-primary" onclick="lookupMember()">確認</button>
       </div>
       <div id="memberPanel">
@@ -507,16 +507,26 @@ function switchTab(name) {
   });
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
+  // 入退室タブに戻ったらQR/ID入力欄へフォーカスを戻し、スキャナーですぐ読み取れる状態にする
+  if (name === 'checkin') {
+    document.getElementById('qrInput').focus();
+  }
 }
 
 async function lookupMember() {
-  const id = document.getElementById('qrInput').value.trim();
+  const inputEl = document.getElementById('qrInput');
+  const id = inputEl.value.trim();
   if (!id) return;
+  // スキャナー(キーボード入力型)で連続スキャンしても値が連結されないよう、
+  // 読み取った値を使った直後に入力欄をクリアしてフォーカスを戻しておく
+  inputEl.value = '';
+  inputEl.focus();
 
   const { data: member } = await sb.from('members').select('*').eq('id', id).single();
   if (!member) {
     document.getElementById('memberPanel').style.display = 'none';
     document.getElementById('actionResult').innerHTML = '<span style="color:#d32f2f">会員が見つかりません: ' + id + '</span>';
+    inputEl.focus();
     return;
   }
 
@@ -537,6 +547,7 @@ async function lookupMember() {
   document.getElementById('btnExit').disabled = !currentVisitId;
   document.getElementById('memberPanel').style.display = 'block';
   document.getElementById('actionResult').textContent = '';
+  inputEl.focus();
 }
 
 async function recordEnter() {
@@ -548,12 +559,13 @@ async function recordEnter() {
     enter_time: now.toTimeString().split(' ')[0]
   }).select().single();
 
-  if (error) { document.getElementById('actionResult').textContent = 'エラー: ' + error.message; return; }
+  if (error) { document.getElementById('actionResult').textContent = 'エラー: ' + error.message; document.getElementById('qrInput').focus(); return; }
   currentVisitId = data.id;
   document.getElementById('btnEnter').disabled = true;
   document.getElementById('btnExit').disabled = false;
   document.getElementById('actionResult').innerHTML = '<span style="color:#2e7d32">✅ 入室記録しました</span>';
   document.getElementById('qrInput').value = '';
+  document.getElementById('qrInput').focus();
   loadTodayData();
 }
 
@@ -585,7 +597,7 @@ async function recordExit() {
     total_yen: seatFee
   }).eq('id', currentVisitId);
 
-  if (error) { document.getElementById('actionResult').textContent = 'エラー: ' + error.message; return; }
+  if (error) { document.getElementById('actionResult').textContent = 'エラー: ' + error.message; document.getElementById('qrInput').focus(); return; }
 
   currentVisitId = null;
   document.getElementById('btnEnter').disabled = false;
@@ -593,6 +605,7 @@ async function recordExit() {
   document.getElementById('actionResult').innerHTML =
     `<span style="color:#1565c0">✅ 退室記録 ${stayMinutes}分 ¥${seatFee.toLocaleString()}</span>`;
   document.getElementById('qrInput').value = '';
+  document.getElementById('qrInput').focus();
   document.getElementById('memberPanel').style.display = 'none';
   loadTodayData();
 }
