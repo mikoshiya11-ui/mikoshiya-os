@@ -194,6 +194,43 @@
     letter-spacing: 0.1em;
   }
 
+  /* ===== LV/EXP先行表示（将来機能予告・見た目のみ / DB連携なし） ===== */
+  .mc-status-row {
+    position: absolute; left: 42px; top: 434px; width: 320px;
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  .mc-lv {
+    font-size: 15px;
+    font-weight: 800;
+    color: #f3d97b;
+    letter-spacing: 0.04em;
+    text-shadow: 0 1px 3px rgba(0,0,0,.6);
+  }
+  .mc-exp-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: #e8d9b0;
+    letter-spacing: 0.03em;
+    text-shadow: 0 1px 2px rgba(0,0,0,.5);
+  }
+  .mc-exp-gauge-wrap {
+    position: absolute; left: 42px; top: 459px; width: 320px; height: 10px;
+  }
+  .mc-exp-gauge-frame {
+    position: absolute; inset: 0;
+    border: 1.5px solid #d4af37;
+    border-radius: 5px;
+    background: linear-gradient(180deg, #0a1428, #05090f);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.6), 0 0 6px rgba(80,155,255,.15);
+    overflow: hidden;
+  }
+  .mc-exp-gauge-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 0%;
+    background: linear-gradient(180deg, #f6e27a, #d4af37);
+    border-radius: 4px 0 0 4px;
+  }
+
   /* ===== 今月の利用状況（usage-panel座標系: 404×151） ===== */
   .usage-panel {
     position: relative;
@@ -376,7 +413,16 @@
         <img class="mc-gem-left" src="assets/decoration_qr_gem_left.png" alt="">
         <img class="mc-gem-right" src="assets/decoration_qr_gem_right.png" alt="">
       </div>
-      <div class="mc-footer">退室時にスキャンして下さい</div>
+      <!-- LV/EXP先行表示: 見た目のみの予告表示。固定値表示でDB取得・加算ロジックなし（後日別Phaseで実装） -->
+      <div class="mc-status-row">
+        <span class="mc-lv">LV. 1</span>
+        <span class="mc-exp-text">EXP 0 / 100</span>
+      </div>
+      <div class="mc-exp-gauge-wrap">
+        <div class="mc-exp-gauge-frame">
+          <div class="mc-exp-gauge-fill" style="width:0%;"></div>
+        </div>
+      </div>
     </div>
 
     <!-- 本日の利用状況（Phase 6） -->
