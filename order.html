@@ -221,32 +221,59 @@
     text-shadow: 0 1px 0 rgba(255,255,255,0.3);
   }
 
+  /* 注文ボタン（Phase 4: RPGボタン） */
   .btn-order {
     width: 100%;
     padding: 16px;
-    background: #0f3460;
-    color: #fff;
-    border: none;
+    background: linear-gradient(180deg, #24365f, #0e1730);
+    color: #f3d97b;
+    border: 2px solid #d4af37;
     border-radius: 12px;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.05em;
     cursor: pointer;
     margin-top: 8px;
-    transition: opacity 0.15s;
+    box-shadow: 0 3px 0 #05070f, 0 5px 10px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.1);
+    text-shadow: 0 1px 2px rgba(0,0,0,.5);
+    transition: box-shadow 0.1s, transform 0.1s, filter 0.15s, opacity 0.15s;
   }
-  .btn-order:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-order:not(:disabled):hover { opacity: 0.9; }
+  .btn-order:not(:disabled):hover { filter: brightness(1.08); }
+  .btn-order:not(:disabled):active {
+    transform: translateY(3px);
+    box-shadow: 0 0 0 #05070f, 0 2px 5px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.1);
+  }
+  .btn-order:disabled {
+    background: linear-gradient(180deg, #3a4152, #262b38);
+    color: #9aa0ab;
+    border-color: #6b6656;
+    box-shadow: none;
+    text-shadow: none;
+    cursor: not-allowed;
+  }
 
-  /* 注文完了 */
+  /* 注文完了バナー（Phase 4: 紺×金の完了演出） */
   .success-banner {
-    background: #e8f5e9;
-    border-radius: 12px;
-    padding: 16px;
-    text-align: center;
-    font-size: 14px;
-    color: #2e7d32;
-    margin-top: 8px;
     display: none;
+    margin-top: 10px;
+    padding: 14px 16px;
+    text-align: center;
+    background: linear-gradient(180deg, rgba(28,44,82,.96), rgba(14,23,48,.96));
+    border: 2px solid #d4af37;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.35), inset 0 0 0 1px rgba(243,217,123,.15);
+  }
+  .success-banner-title {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: #f3d97b;
+    text-shadow: 0 1px 3px rgba(0,0,0,.5);
+    margin-bottom: 4px;
+  }
+  .success-banner-sub {
+    font-size: 12px;
+    color: #c9d3ec;
   }
 
   /* ===== 下部ナビ（member-card.htmlと同一のRPG版） ===== */
@@ -350,7 +377,10 @@
           <span id="totalPrice">¥0</span>
         </div>
         <button class="btn-order" id="btnOrder" disabled>注文する</button>
-        <div class="success-banner" id="successBanner">✅ 注文を送信しました！スタッフにお声がけください</div>
+        <div class="success-banner" id="successBanner">
+          <div class="success-banner-title">✦ 注文完了 ✦</div>
+          <div class="success-banner-sub">ご注文ありがとうございます。スタッフにお声がけください</div>
+        </div>
       </div>
       <div class="rpg-panel-bottom"></div>
     </div>
