@@ -341,10 +341,20 @@
     background: #ff5252; color: #fff; text-align: center;
     font-size: 12px; font-weight: 700; padding: 4px 0;
   }
+  /* デバッグ表示（プレビュー専用。本番member-card.htmlには入れない） */
+  .scale-debug {
+    position: fixed; top: 24px; right: 6px; z-index: 200;
+    background: rgba(0,0,0,0.75); color: #7CFC9A;
+    font: 11px/1.4 'Menlo', 'Consolas', monospace;
+    padding: 4px 8px; border-radius: 4px;
+    pointer-events: none;
+    white-space: pre;
+  }
 </style>
 </head>
 <body>
 <div class="preview-banner">プレビュー専用ファイル（ログイン不要・ダミーデータ表示）。本番はmember-card.htmlです。</div>
+<div class="scale-debug" id="scaleDebug"></div>
 
 <div id="app" style="display:block; padding-top:22px;">
   <header class="topbar">
@@ -469,6 +479,15 @@ function applyScale() {
   const scale = Math.min(1, shell.clientWidth / CONTENT_BASE_WIDTH);
   inner.style.transform = 'scale(' + scale + ')';
   shell.style.height = (inner.offsetHeight * scale) + 'px';
+
+  // デバッグ表示更新（プレビュー専用）
+  const dbg = document.getElementById('scaleDebug');
+  if (dbg) {
+    dbg.textContent =
+      'innerWidth: ' + window.innerWidth + 'px\n' +
+      'shell.clientWidth: ' + shell.clientWidth + 'px\n' +
+      'scale: ' + scale.toFixed(4);
+  }
 }
 window.addEventListener('resize', applyScale);
 window.addEventListener('orientationchange', applyScale);
