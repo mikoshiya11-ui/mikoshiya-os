@@ -169,7 +169,14 @@
      他2項目（icon+label）と視覚的な高さ・中心位置が揃うよう縦位置のみ調整する */
   .nav-item-quest {
     justify-content: flex-start;
-    padding-top: 8px;
+    padding-top: 6px;
+  }
+  /* icon_nav_quest.pngは正方形キャンバス（縦横比が他2アイコンと異なる）のため、
+     専用サイズで縦横比を保って表示し、CSSでの変形は行わない */
+  .nav-icon-quest {
+    width: 30px;
+    height: 30px;
+    margin-bottom: 0;
   }
   .nav-label {
     position: relative;
@@ -220,7 +227,7 @@
   </a>
   <a href="quest.html" class="nav-item nav-item-quest">
     <img class="nav-btn-bg" src="assets/nav_button_inactive.png" alt="">
-    <img class="nav-icon" src="assets/icon_nav_quest.png" alt="QUEST">
+    <img class="nav-icon nav-icon-quest" src="assets/icon_nav_quest.png" alt="QUEST">
   </a>
   <a href="order.html" class="nav-item active">
     <img class="nav-btn-bg" src="assets/nav_button_active.png" alt="">
