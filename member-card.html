@@ -551,10 +551,20 @@ async function init() {
   }
 
   // ===== 本日の利用状況（Phase 6: 新規） =====
-  // 上で取得済みの月次visitsから本日分のみを抽出（冒険の記録の取得ロジックには手を加えない）
-  const todaysVisits = (visits || []).filter(v => v.date === today);
-  const activeVisit = todaysVisits.find(v => !v.exit_time);
-  const completedTodayVisits = todaysVisits.filter(v => v.exit_time);
+  // 滞在中フラグは毎回DBへ再照会して判定する（スタッフ側が別画面で退室処理をした場合でも、
+  // このページを開きっぱなしのまま自動で反映されるようにするため。冒険の記録側の
+  // クエリ・表示ロジックは変更しない）
+  let activeVisit = null;
+  let completedTodayVisits = [];
+
+  async function fetchTodaysVisits() {
+    const { data } = await sb
+      .from('visits')
+      .select('*')
+      .eq('member_id', member.id)
+      .eq('date', today);
+    return data || [];
+  }
 
   // 滞在中セッションの経過分数（enter_timeはHH:MM:SS、staff.htmlのstayMinutes算出と同じ方式）
   function calcElapsedMinutes(enterTimeStr) {
@@ -572,6 +582,10 @@ async function init() {
   }
 
   async function renderTodayUsage() {
+    const todaysVisits = await fetchTodaysVisits();
+    activeVisit = todaysVisits.find(v => !v.exit_time) || null;
+    completedTodayVisits = todaysVisits.filter(v => v.exit_time);
+
     const completedMinutes = completedTodayVisits.reduce((s, v) => s + (v.stay_minutes || 0), 0);
     const completedFee = completedTodayVisits.reduce((s, v) => s + (v.total_yen || 0), 0);
 
@@ -599,9 +613,13 @@ async function init() {
 
   await renderTodayUsage();
 
-  // 滞在中は経過時間・概算料金を1分ごとに更新
+  // 滞在中は1分ごとにDBへ再照会し、経過時間・概算料金の更新に加えて
+  // スタッフ側で退室処理された場合も自動検知する。退室が確認できたら更新を停止する
   if (activeVisit) {
-    setInterval(renderTodayUsage, 60000);
+    const usageTimer = setInterval(async () => {
+      await renderTodayUsage();
+      if (!activeVisit) clearInterval(usageTimer);
+    }, 60000);
   }
 
   requestAnimationFrame(applyScale);

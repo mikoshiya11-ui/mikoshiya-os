@@ -80,6 +80,8 @@
     font-size: 16px;
     outline: none;
     transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
   }
   .qr-input:focus { border-color: #0f3460; }
   .btn-primary {
@@ -291,7 +293,7 @@
     <div class="card">
       <div class="card-title">QRコード読み取り / 会員ID入力</div>
       <div class="qr-input-area">
-        <input type="text" class="qr-input" id="qrInput" placeholder="会員ID (例: A-00001)" autocomplete="off" autofocus>
+        <input type="search" class="qr-input" id="qrInput" name="qr-scan-input" placeholder="会員ID (例: A-00001)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" autofocus>
         <button class="btn-primary" onclick="lookupMember()">確認</button>
       </div>
       <div id="memberPanel">
