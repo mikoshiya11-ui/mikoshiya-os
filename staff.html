@@ -491,9 +491,24 @@ async function init() {
   document.getElementById('todayDate').textContent =
     today.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 
-  // Enterキーでlookup
+  // Enterキーでlookup（HIDスキャナーが末尾にEnter/CRを送ってくる場合）
   document.getElementById('qrInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') lookupMember();
+  });
+
+  // スキャナーがEnterを送らない機種でも動くよう、入力が一定時間止まったら自動でlookupする。
+  // スキャナーは全文字をごく短時間（数十ms間隔）で連続入力するため、
+  // 人が手入力する間隔よりずっと短い150msで「入力完了」とみなして良い。
+  let scanTimer = null;
+  document.getElementById('qrInput').addEventListener('input', e => {
+    clearTimeout(scanTimer);
+    const val = e.target.value.trim();
+    if (!val) return;
+    scanTimer = setTimeout(() => {
+      // Enterで既にlookupMember()が呼ばれ入力欄がクリアされているケースと重複しないよう、
+      // その時点でまだ値が残っている場合のみ実行する
+      if (document.getElementById('qrInput').value.trim() === val) lookupMember();
+    }, 150);
   });
 
   loadTodayData();
