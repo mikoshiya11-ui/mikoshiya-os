@@ -233,14 +233,16 @@
     font-size: 11px; font-weight: 800; color: #f3d97b; letter-spacing: 0.1em;
   }
   .up-stats {
-    position: absolute; left: 14px; top: 66px; width: 376px;
+    position: absolute; left: 14px; top: 50px; width: 376px;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
   }
   .up-stat { text-align: center; }
-  .up-stat img { width: 24px; height: 24px; margin-bottom: 2px; }
+  /* Phase 6追記: アイコンを約1.7倍（24px→40px）に拡大し3項目の視覚的な大きさを揃える。
+     パネル高さ(151px)は変更せず、上下の余白を詰めて収める */
+  .up-stat img { width: 40px; height: 40px; margin-bottom: 1px; }
   .up-num { font-size: 19px; font-weight: 800; color: #3b2a06; }
-  .up-label { font-size: 10px; color: #8a744a; margin-top: 2px; }
+  .up-label { font-size: 10px; color: #8a744a; margin-top: 1px; }
 
   /* ===== 冒険の記録（history-panel座標系: 幅404, 縦可変9スライス） ===== */
   .history-panel {
@@ -537,8 +539,17 @@ async function init() {
   // 今月の来訪データ（冒険の記録用。クエリ・表示ロジックはPhase 6でも変更なし）
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  // 「本日」の判定はcheckin.html / staff.htmlの日付記録方式（toISOString基準）に合わせる
-  const today = new Date().toISOString().split('T')[0];
+
+  // 日本時間（Asia/Tokyo）基準で「本日」を判定する。
+  // checkin.html / staff.htmlの記録ロジック（toISOString=UTC基準）は今回変更しないため、
+  // 0:00〜8:59 JSTに記録された来訪はvisits.dateが前日として保存されている可能性がある点に注意。
+  function getJSTDateString(d = new Date()) {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  }
+  const today = getJSTDateString();
+  // order_itemsのordered_atはタイムスタンプのため、JSTの0時を明示的なUTCオフセット付きで指定し、
+  // サーバー側のタイムゾーン解釈に依存せず正確な「本日0時（JST）」以降を取得する。
+  const todayStartISO = today + 'T00:00:00+09:00';
 
   const { data: visits } = await sb
     .from('visits')
@@ -601,7 +612,7 @@ async function init() {
       .from('order_items')
       .select('subtotal')
       .eq('member_id', member.id)
-      .gte('ordered_at', today + 'T00:00:00');
+      .gte('ordered_at', todayStartISO);
     const purchaseTotal = (orders || []).reduce((s, o) => s + (o.subtotal || 0), 0);
 
     document.getElementById('statMinutes').textContent = minutes;
