@@ -548,6 +548,14 @@ async function lookupMember() {
   document.getElementById('memberPanel').style.display = 'block';
   document.getElementById('actionResult').textContent = '';
   inputEl.focus();
+
+  // 受付システム化：ボタン操作を待たず、スキャン直後に状態に応じて入室/退室を自動確定する
+  // （ボタンは万一のエラー時などに手動で再実行できるよう残してある）
+  if (currentVisitId) {
+    await recordExit();
+  } else {
+    await recordEnter();
+  }
 }
 
 async function recordEnter() {
