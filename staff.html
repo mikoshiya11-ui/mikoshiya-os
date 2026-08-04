@@ -566,9 +566,10 @@ async function recordExit() {
     const [eh, em, es] = visit.enter_time.split(':').map(Number);
     const [xh, xm] = exitTime.split(':').map(Number);
     stayMinutes = (xh * 60 + xm) - (eh * 60 + em);
-    // ドロップイン 30分220円
+    // ドロップイン 30分198円（税込）、1日上限1,980円（税込）
     if (currentMember.plan === 'dropin') {
-      seatFee = Math.ceil(stayMinutes / 30) * 220;
+      const units = Math.ceil(stayMinutes / 30);
+      seatFee = Math.min(units * 198, 1980);
     }
   }
 
