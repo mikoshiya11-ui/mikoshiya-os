@@ -50,17 +50,27 @@
       inset 0 0 0 1px rgba(243,217,123,.18);
     text-align: center;
   }
-  .logo {
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: #f3d97b;
-    margin-bottom: 8px;
+  .login-emblem {
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 6px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,.45));
   }
-  .subtitle {
-    font-size: 13px;
+  .login-logo-rpg {
+    display: block;
+    width: min(280px, 100%);
+    height: auto;
+    margin: 0 auto 10px;
+    object-fit: contain;
+  }
+  .login-subtitle {
+    margin-top: 4px;
+    margin-bottom: 28px;
     color: #b9c6ea;
-    margin-bottom: 40px;
+    font-size: 12px;
+    text-align: center;
+    letter-spacing: .04em;
   }
   .btn-google {
     display: flex;
@@ -121,8 +131,9 @@
 </head>
 <body>
 <div class="card">
-  <div class="logo">MIKOSHIYA</div>
-  <div class="subtitle">コワーキングスペース 会員ポータル</div>
+  <img class="login-emblem" src="assets/header_emblem.png" alt="">
+  <img class="login-logo-rpg" src="assets/logo_mikoshiya_rpg.png" alt="MIKOSHIYA">
+  <div class="login-subtitle">コワーキングスペース 会員ポータル</div>
 
   <button class="btn-google" id="btnGoogle">
     <svg width="18" height="18" viewBox="0 0 18 18">
