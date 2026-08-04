@@ -124,27 +124,59 @@
     display: none;
   }
 
+  /* ===== 下部ナビ（member-card.htmlと同一のRPG版） ===== */
   .nav-bar {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    background: #fff;
-    border-top: 1px solid #eee;
+    min-height: 56px;
+    background-color: #0a0f1c;
+    background-image: url('assets/navbar_background.png');
+    background-repeat: repeat-x;
+    background-size: 100px 27.5px;
+    background-position: top left;
+    padding-bottom: env(safe-area-inset-bottom);
     display: flex;
     justify-content: space-around;
-    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    align-items: flex-start;
+    box-shadow: 0 -4px 14px rgba(0,0,0,0.3);
+  }
+  .nav-center-gem {
+    position: absolute; left: 50%; top: 0;
+    width: 16px; height: 16px;
+    transform: translateX(-50%);
   }
   .nav-item {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
-    font-size: 10px;
-    color: #888;
+    justify-content: center;
+    width: 66px; height: 54px;
+    margin-top: 1px;
     text-decoration: none;
-    padding: 4px 16px;
   }
-  .nav-item.active { color: #0f3460; }
-  .nav-item span { font-size: 20px; }
+  .nav-btn-bg {
+    position: absolute; left: 50%; top: 50%;
+    width: 66px; height: 54px;
+    transform: translate(-50%, -50%);
+  }
+  .nav-icon {
+    position: relative;
+    width: 24px; height: 26px;
+    margin-bottom: 1px;
+  }
+  /* QUESTはicon_nav_quest.png内に「QUEST」文字がデザインとして焼き込まれているためnav-labelを非表示にし、
+     他2項目（icon+label）と視覚的な高さ・中心位置が揃うよう縦位置のみ調整する */
+  .nav-item-quest {
+    justify-content: flex-start;
+    padding-top: 8px;
+  }
+  .nav-label {
+    position: relative;
+    font-size: 9px;
+    color: #9aa0ab;
+  }
+  .nav-item.active .nav-label { color: #f3d97b; }
 </style>
 </head>
 <body>
@@ -180,11 +212,20 @@
 </div>
 
 <nav class="nav-bar">
+  <img class="nav-center-gem" src="assets/decoration_nav_center.png" alt="">
   <a href="member-card.html" class="nav-item">
-    <span>🪪</span>会員証
+    <img class="nav-btn-bg" src="assets/nav_button_inactive.png" alt="">
+    <img class="nav-icon" src="assets/icon_nav_member.png" alt="">
+    <span class="nav-label">会員証</span>
+  </a>
+  <a href="quest.html" class="nav-item nav-item-quest">
+    <img class="nav-btn-bg" src="assets/nav_button_inactive.png" alt="">
+    <img class="nav-icon" src="assets/icon_nav_quest.png" alt="QUEST">
   </a>
   <a href="order.html" class="nav-item active">
-    <span>🛒</span>注文
+    <img class="nav-btn-bg" src="assets/nav_button_active.png" alt="">
+    <img class="nav-icon" src="assets/icon_nav_order.png" alt="">
+    <span class="nav-label">注文</span>
   </a>
 </nav>
 

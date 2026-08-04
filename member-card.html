@@ -329,6 +329,12 @@
     width: 24px; height: 26px;
     margin-bottom: 1px;
   }
+  /* QUESTはicon_nav_quest.png内に「QUEST」文字がデザインとして焼き込まれているためnav-labelを非表示にし、
+     他2項目（icon+label）と視覚的な高さ・中心位置が揃うよう縦位置のみ調整する */
+  .nav-item-quest {
+    justify-content: flex-start;
+    padding-top: 8px;
+  }
   .nav-label {
     position: relative;
     font-size: 9px;
@@ -437,6 +443,10 @@
     <img class="nav-btn-bg" src="assets/nav_button_active.png" alt="">
     <img class="nav-icon" src="assets/icon_nav_member.png" alt="">
     <span class="nav-label">会員証</span>
+  </a>
+  <a href="quest.html" class="nav-item nav-item-quest">
+    <img class="nav-btn-bg" src="assets/nav_button_inactive.png" alt="">
+    <img class="nav-icon" src="assets/icon_nav_quest.png" alt="QUEST">
   </a>
   <a href="order.html" class="nav-item">
     <img class="nav-btn-bg" src="assets/nav_button_inactive.png" alt="">
