@@ -121,25 +121,41 @@
     margin-bottom: 14px;
   }
 
-  /* 商品グリッド */
+  /* 商品グリッド（Phase 2: RPGアイテムカード） */
   .product-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
   .product-card {
-    border: 2px solid #f0f0f0;
-    border-radius: 12px;
-    padding: 14px 12px;
+    background: rgba(255, 250, 235, 0.55);
+    border: 1.5px solid #b8935a;
+    border-radius: 8px;
+    padding: 12px 10px;
     cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.1s;
     user-select: none;
   }
-  .product-card:active { background: #f8f8f8; }
-  .product-card:hover { border-color: #0f3460; }
-  .product-emoji { font-size: 28px; margin-bottom: 6px; }
-  .product-name { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 2px; }
-  .product-desc { font-size: 11px; color: #aaa; margin-bottom: 6px; }
+  .product-card:hover { border-color: #d4af37; }
+  /* 恒久的な選択状態ではなく、タップ時の一瞬のフィードバック */
+  .product-card:active {
+    background: rgba(255, 250, 235, 0.85);
+    border-color: #f3d97b;
+    box-shadow: 0 0 0 2px rgba(80,155,255,.35), 0 0 8px rgba(80,155,255,.3);
+    transform: scale(0.97);
+  }
+  .product-emoji {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 0 6px;
+    font-size: 16px;
+    background: linear-gradient(180deg, #1c2c52, #0e1730);
+    border: 1.5px solid #d4af37;
+    border-radius: 50%;
+    box-shadow: inset 0 0 4px rgba(0,0,0,.4);
+  }
+  .product-name { font-size: 13px; font-weight: 700; color: #1c2c52; margin-bottom: 2px; }
+  .product-desc { font-size: 11px; color: #807a6c; margin-bottom: 5px; }
   .product-price { font-size: 15px; font-weight: 700; color: #0f3460; }
 
   /* カート */
