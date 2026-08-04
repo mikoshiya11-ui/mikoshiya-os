@@ -120,6 +120,13 @@
     letter-spacing: 0.1em;
     margin-bottom: 14px;
   }
+  .section-title-sub {
+    font-size: 10px;
+    font-weight: 600;
+    color: #9c8a5e;
+    letter-spacing: 0.05em;
+    margin-left: 6px;
+  }
 
   /* 商品グリッド（Phase 2: RPGアイテムカード） */
   .product-grid {
@@ -158,39 +165,60 @@
   .product-desc { font-size: 11px; color: #807a6c; margin-bottom: 5px; }
   .product-price { font-size: 15px; font-weight: 700; color: #0f3460; }
 
-  /* カート */
-  .cart-empty { font-size: 13px; color: #bbb; text-align: center; padding: 16px 0; }
+  /* カート（Phase 3: RPGアイテム袋） */
+  .cart-empty {
+    font-size: 13px;
+    color: #807a6c;
+    text-align: center;
+    padding: 22px 0;
+  }
   .cart-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 10px 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid rgba(184, 147, 90, 0.35);
   }
   .cart-item:last-child { border-bottom: none; }
-  .cart-item-name { font-size: 14px; color: #333; flex: 1; }
+  .cart-item-name { font-size: 14px; color: #1c2c52; font-weight: 600; flex: 1; }
   .qty-ctrl {
     display: flex; align-items: center; gap: 8px;
   }
   .qty-btn {
     width: 28px; height: 28px;
-    border-radius: 50%;
-    border: 1.5px solid #ddd;
-    background: #fff;
+    border-radius: 6px;
+    border: 1.5px solid #d4af37;
+    background: linear-gradient(180deg, #1c2c52, #0e1730);
     font-size: 16px;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    color: #333;
+    color: #f3d97b;
+    transition: background 0.15s, transform 0.1s;
   }
-  .qty-num { font-size: 15px; font-weight: 600; min-width: 20px; text-align: center; }
-  .cart-item-sub { font-size: 14px; font-weight: 600; min-width: 60px; text-align: right; }
+  .qty-btn:active {
+    background: linear-gradient(180deg, #24365f, #16223f);
+    transform: scale(0.93);
+  }
+  .qty-num { font-size: 15px; font-weight: 700; color: #3a2f1a; min-width: 20px; text-align: center; }
+  .cart-item-sub { font-size: 14px; font-weight: 700; color: #0f3460; min-width: 60px; text-align: right; }
 
   .cart-total {
-    display: flex; justify-content: space-between;
+    display: flex; justify-content: space-between; align-items: baseline;
     padding: 14px 0 0;
-    font-size: 16px; font-weight: 700;
-    border-top: 2px solid #f0f0f0;
-    margin-top: 4px;
+    border-top: 2px solid rgba(184, 147, 90, 0.5);
+    margin-top: 8px;
+  }
+  .cart-total span:first-child {
+    font-size: 13px;
+    font-weight: 700;
+    color: #5c4a2a;
+    letter-spacing: 0.08em;
+  }
+  #totalPrice {
+    font-size: 21px;
+    font-weight: 800;
+    color: #0f3460;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.3);
   }
 
   .btn-order {
@@ -315,7 +343,7 @@
     <div class="section">
       <div class="rpg-panel-top"></div>
       <div class="rpg-panel-mid">
-        <div class="section-title">カート</div>
+        <div class="section-title">アイテム袋<span class="section-title-sub">カート</span></div>
         <div id="cartList"><div class="cart-empty">商品を選んでください</div></div>
         <div class="cart-total" id="cartTotal" style="display:none">
           <span>合計</span>
