@@ -396,9 +396,21 @@ async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { location.href = 'index.html'; return; }
 
-  // 会員情報取得
-  const { data: m } = await sb.from('members').select('*').eq('email', session.user.email).single();
+  // 会員情報取得（LINEログインはline_id、それ以外はemailで照合。index.html/member-card.htmlと同じロジック）
+  const user = session.user;
+  const isLine = user.user_metadata?.provider === 'line';
+  const lineId = user.user_metadata?.sub;
+  const { data: m } = isLine
+    ? await sb.from('members').select('*').eq('line_id', lineId).maybeSingle()
+    : await sb.from('members').select('*').eq('email', user.email).maybeSingle();
   member = m;
+
+  if (!member) {
+    document.getElementById('loading-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('productGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#807a6c;font-size:13px;padding:20px 0;">会員情報が確認できませんでした。<br>スタッフへお声がけください。</div>';
+    return;
+  }
 
   // 商品取得
   const { data: prods } = await sb.from('products').select('*').eq('active', true).order('category');
@@ -473,8 +485,15 @@ document.getElementById('btnOrder').addEventListener('click', async () => {
   btn.disabled = true;
   btn.textContent = '送信中...';
 
+  if (!member) {
+    alert('会員情報が確認できませんでした。スタッフへお声がけください。');
+    btn.disabled = false;
+    btn.textContent = '注文する';
+    return;
+  }
+
   const items = Object.values(cart);
-  const memberId = member?.id || 'GUEST';
+  const memberId = member.id;
   const orderNum = 'ORD-' + Date.now();
 
   const rows = items.map(({ product: p, qty }) => ({
