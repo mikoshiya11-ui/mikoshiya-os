@@ -9,8 +9,25 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
-    background: #f5f5f0;
     min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    background:
+      repeating-linear-gradient(
+        135deg,
+        rgba(255,255,255,0.012) 0,
+        rgba(255,255,255,0.012) 1px,
+        transparent 1px,
+        transparent 3px
+      ),
+      radial-gradient(
+        ellipse 120% 60% at 50% -10%,
+        #24365f 0%,
+        #16223f 38%,
+        #0a1428 75%,
+        #05090f 100%
+      );
+    background-attachment: fixed;
     display: flex;
     align-items: center;
     justify-content: center;
