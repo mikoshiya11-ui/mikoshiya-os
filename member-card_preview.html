@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>会員証 — MIKOSHIYA</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>【プレビュー専用・ログイン不要】会員証 — MIKOSHIYA</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -332,19 +331,17 @@
   .nav-item.active .nav-label { color: #f3d97b; }
   .pb { padding-bottom: 90px; }
 
-  #loading-overlay {
-    position: fixed; inset: 0;
-    background: linear-gradient(180deg, #1c2c52, #0e1730);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; color: #f3d97b;
-    z-index: 100;
+  .preview-banner {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    background: #ff5252; color: #fff; text-align: center;
+    font-size: 12px; font-weight: 700; padding: 4px 0;
   }
 </style>
 </head>
 <body>
-<div id="loading-overlay">読み込み中...</div>
+<div class="preview-banner">プレビュー専用ファイル（ログイン不要・ダミーデータ表示）。本番はmember-card.htmlです。</div>
 
-<div id="app" style="display:none">
+<div id="app" style="display:block; padding-top:22px;">
   <header class="topbar">
     <div class="brand-wrap">
       <img class="header-frame" src="assets/header_brand_frame.png" alt="">
@@ -367,11 +364,11 @@
       <img class="mc-ribbon" src="assets/ribbon_member_card.png" alt="">
       <div class="mc-ribbon-text">MEMBER CARD</div>
       <img class="mc-emblem" src="assets/emblem_member_card.png" alt="">
-      <div class="mc-name" id="memberName">—</div>
-      <div class="mc-id" id="memberId">—</div>
+      <div class="mc-name" id="memberName">山田 太郎</div>
+      <div class="mc-id" id="memberId">M-000123</div>
       <div class="mc-plan-wrap">
         <img class="mc-plan-bg" src="assets/button_plan.png" alt="">
-        <div class="mc-plan-text" id="memberPlan">—</div>
+        <div class="mc-plan-text" id="memberPlan">ドロップイン</div>
       </div>
       <div class="mc-qr-wrap">
         <img class="mc-qr-frame" src="assets/frame_qr.png" alt="">
@@ -392,29 +389,44 @@
       <div class="up-stats">
         <div class="up-stat">
           <img src="assets/icon_visit.png" alt="">
-          <div class="up-num" id="statVisits">—</div>
+          <div class="up-num" id="statVisits">3</div>
           <div class="up-label">来訪回数</div>
         </div>
         <div class="up-stat">
           <img src="assets/icon_time.png" alt="">
-          <div class="up-num" id="statHours">—</div>
+          <div class="up-num" id="statHours">12.5</div>
           <div class="up-label">利用時間(h)</div>
         </div>
         <div class="up-stat">
           <img src="assets/icon_price.png" alt="">
-          <div class="up-num" id="statTotal">—</div>
+          <div class="up-num" id="statTotal">8,400</div>
           <div class="up-label">合計(¥)</div>
         </div>
       </div>
     </div>
 
-    <!-- 冒険の記録 -->
+    <!-- 冒険の記録（2件のダミーデータ） -->
     <div class="history-panel">
       <div class="hp-top">
         <div class="hp-title">冒険の記録</div>
       </div>
       <div class="hp-mid">
-        <div id="visitList">データなし</div>
+        <div id="visitList">
+          <div class="visit-item">
+            <div>
+              <div class="visit-date">2026-08-03</div>
+              <div class="visit-time">19:00 〜 21:30</div>
+            </div>
+            <div class="visit-fee">¥1,800</div>
+          </div>
+          <div class="visit-item">
+            <div>
+              <div class="visit-date">2026-08-01</div>
+              <div class="visit-time">13:00 〜 15:00</div>
+            </div>
+            <div class="visit-fee">¥1,500</div>
+          </div>
+        </div>
       </div>
       <div class="hp-bottom"></div>
     </div>
@@ -437,107 +449,7 @@
 </nav>
 
 <script>
-const SUPABASE_URL = 'https://ashoqzwxgaovepclbawf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzaG9xend4Z2FvdmVwY2xiYXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTk2MTMsImV4cCI6MjEwMTI3NTYxM30.Ke1Fa8MSTwj3OFH5mrh2ViPFCq4GUpYQh5vegyGbMLQ';
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// 会員名: 1行に収まるようフォントサイズを自動縮小（2行化・折り返しはしない）
-function fitOneLine(el, maxWidth, maxSize, minSize) {
-  let size = maxSize;
-  el.style.fontSize = size + 'px';
-  while (el.scrollWidth > maxWidth && size > minSize) {
-    size -= 1;
-    el.style.fontSize = size + 'px';
-  }
-}
-
-async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { location.href = 'index.html'; return; }
-
-  const user = session.user;
-  const isLine = user.user_metadata?.provider === 'line';
-  const lineId = user.user_metadata?.sub;
-
-  // members テーブルから取得（LINEログインはline_id、それ以外はemailで照合）
-  const { data: member, error } = isLine
-    ? await sb.from('members').select('*').eq('line_id', lineId).maybeSingle()
-    : await sb.from('members').select('*').eq('email', user.email).maybeSingle();
-
-  document.getElementById('loading-overlay').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-
-  const nameEl = document.getElementById('memberName');
-
-  if (!member) {
-    // 未登録会員
-    nameEl.textContent = user.user_metadata?.name || user.user_metadata?.full_name || user.email || 'ゲスト';
-    fitOneLine(nameEl, 320, 21, 12);
-    document.getElementById('memberId').textContent = '（未登録 — スタッフへお声がけください）';
-    document.getElementById('memberPlan').textContent = '—';
-    // QRに識別子を入れる（LINEはlineId、それ以外はemail）
-    new QRCode(document.getElementById('qrCanvas'), { text: isLine ? (lineId || 'unknown') : user.email, width: 192, height: 192 });
-    return;
-  }
-
-  // 表示
-  nameEl.textContent = member.name || user.user_metadata?.full_name || user.user_metadata?.name || '—';
-  fitOneLine(nameEl, 320, 21, 12);
-  document.getElementById('memberId').textContent = member.id;
-  document.getElementById('memberPlan').textContent = member.plan === 'monthly' ? '月額プラン' : 'ドロップイン';
-
-  // スタッフ・オーナーは戻るボタンを表示
-  if (['スタッフ', 'オーナー'].includes(member.rank)) {
-    document.getElementById('btnStaffRoom').style.display = 'inline-block';
-  }
-
-  // QRコード生成（会員ID・2倍サイズで生成しCSSで104pxに縮小＝レティナ対応）
-  new QRCode(document.getElementById('qrCanvas'), { text: member.id, width: 192, height: 192 });
-
-  // 今月の来訪データ
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-
-  const { data: visits } = await sb
-    .from('visits')
-    .select('*')
-    .eq('member_id', member.id)
-    .gte('date', monthStart)
-    .order('date', { ascending: false });
-
-  if (visits && visits.length > 0) {
-    const totalMinutes = visits.reduce((s, v) => s + (v.stay_minutes || 0), 0);
-    const totalYen = visits.reduce((s, v) => s + (v.total_yen || 0), 0);
-
-    document.getElementById('statVisits').textContent = visits.length;
-    document.getElementById('statHours').textContent = (totalMinutes / 60).toFixed(1);
-    document.getElementById('statTotal').textContent = totalYen.toLocaleString();
-
-    // 最近5件
-    document.getElementById('visitList').innerHTML = visits.slice(0, 5).map(v => `
-      <div class="visit-item">
-        <div>
-          <div class="visit-date">${v.date}</div>
-          <div class="visit-time">${v.enter_time?.slice(0,5) || '—'} 〜 ${v.exit_time?.slice(0,5) || '滞在中'}</div>
-        </div>
-        <div class="visit-fee">¥${v.total_yen.toLocaleString()}</div>
-      </div>
-    `).join('');
-  } else {
-    document.getElementById('statVisits').textContent = '0';
-    document.getElementById('statHours').textContent = '0';
-    document.getElementById('statTotal').textContent = '0';
-    document.getElementById('visitList').textContent = '今月の来訪はありません';
-  }
-}
-
-document.getElementById('btnLogout').addEventListener('click', async () => {
-  await sb.auth.signOut();
-  location.href = 'index.html';
-});
-
-init();
+new QRCode(document.getElementById('qrCanvas'), { text: 'M-000123', width: 192, height: 192 });
 </script>
 </body>
 </html>
