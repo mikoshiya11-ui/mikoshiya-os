@@ -161,6 +161,11 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let handled = false;
 
+// 日本時間（Asia/Tokyo）基準でvisits.dateへ保存する日付を生成する（Phase 6.5）
+function getJSTDateString(d = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+}
+
 function showLoginButtons() {
   document.getElementById('processingCard').style.display = 'none';
   document.getElementById('loginCard').style.display = 'block';
@@ -212,7 +217,7 @@ async function handleUser(user) {
     return;
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getJSTDateString();
   const { data: activeVisits } = await sb
     .from('visits')
     .select('*')

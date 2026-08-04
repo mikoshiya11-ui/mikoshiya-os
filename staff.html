@@ -463,6 +463,11 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentMember = null;
 let currentVisitId = null;
 
+// 日本時間（Asia/Tokyo）基準でvisits.dateへ保存・照合する日付を生成する（Phase 6.5）
+function getJSTDateString(d = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+}
+
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { location.href = 'index.html'; return; }
@@ -518,7 +523,7 @@ async function lookupMember() {
   currentMember = member;
 
   // 今日のアクティブな visit を確認
-  const today = new Date().toISOString().split('T')[0];
+  const today = getJSTDateString();
   const { data: visits } = await sb.from('visits')
     .select('*').eq('member_id', id).eq('date', today).is('exit_time', null);
   currentVisitId = visits?.[0]?.id || null;
@@ -539,7 +544,7 @@ async function recordEnter() {
   const now = new Date();
   const { data, error } = await sb.from('visits').insert({
     member_id: currentMember.id,
-    date: now.toISOString().split('T')[0],
+    date: getJSTDateString(now),
     enter_time: now.toTimeString().split(' ')[0]
   }).select().single();
 
@@ -593,7 +598,7 @@ async function recordExit() {
 }
 
 async function loadTodayData() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getJSTDateString();
   const { data: visits } = await sb.from('visits')
     .select('*, members(name)')
     .eq('date', today)
