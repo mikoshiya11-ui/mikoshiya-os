@@ -539,7 +539,7 @@ async function init() {
     // 未登録会員
     nameEl.textContent = user.user_metadata?.name || user.user_metadata?.full_name || user.email || 'ゲスト';
     fitOneLine(nameEl, 320, 21, 12);
-    document.getElementById('memberId').textContent = '（未登録 — スタッフへお声がけください）';
+    document.getElementById('memberId').textContent = '未登録: ' + (isLine ? (lineId || 'unknown') : user.email);
     document.getElementById('memberPlan').textContent = '—';
     // QRに識別子を入れる（LINEはlineId、それ以外はemail）
     new QRCode(document.getElementById('qrCanvas'), { text: isLine ? (lineId || 'unknown') : user.email, width: 192, height: 192 });
