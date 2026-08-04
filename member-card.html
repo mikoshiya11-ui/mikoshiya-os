@@ -577,6 +577,8 @@ async function init() {
   // 滞在中セッションの概算料金（staff.html Phase 5と同一の料金体系: 198円/30分・上限1,980円）
   function estimateSeatFee(minutes) {
     if (member.plan !== 'dropin') return 0;
+    // 5分以内の滞在は誤スキャン等の可能性を考慮して無料（staff.html recordExit()と同一ルール）
+    if (minutes <= 5) return 0;
     const units = Math.ceil(minutes / 30);
     return Math.min(units * 198, 1980);
   }
