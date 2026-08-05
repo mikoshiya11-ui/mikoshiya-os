@@ -133,14 +133,19 @@
     transform: scale(0.97);
   }
   .product-emoji {
-    width: 30px; height: 30px;
+    width: 36px; height: 36px;
     display: flex; align-items: center; justify-content: center;
     margin: 0 0 6px;
     font-size: 16px;
-    background: linear-gradient(180deg, #1c2c52, #0e1730);
+    background: linear-gradient(180deg, #fff9ec, #f0e2bd);
     border: 1.5px solid #d4af37;
     border-radius: 50%;
-    box-shadow: inset 0 0 4px rgba(0,0,0,.4);
+    box-shadow: inset 0 1px 2px rgba(255,255,255,.6), 0 1px 3px rgba(0,0,0,.25);
+  }
+  .product-emoji img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
   }
   .product-name { font-size: 13px; font-weight: 700; color: #1c2c52; margin-bottom: 2px; }
   .product-desc { font-size: 11px; color: #807a6c; margin-bottom: 5px; }
@@ -392,6 +397,16 @@ let cart = {}; // { sku: { product, qty } }
 let member = null;
 let products = [];
 
+// SKUごとのイラストアイコン（絵文字の代わりに使用）
+const ICON_MAP = {
+  'C001': 'assets/order_icon_printer_bw.png',
+  'C002': 'assets/order_icon_printer_color.png',
+  'C003': 'assets/order_icon_meeting_room.png',
+  'D001': 'assets/order_icon_coffee.png',
+  'D003': 'assets/order_icon_green_tea.png',
+  'D004': 'assets/order_icon_cup_noodle.png'
+};
+
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { location.href = 'index.html'; return; }
@@ -428,7 +443,7 @@ function renderProducts() {
 
   grid.innerHTML = products.map(p => `
     <div class="product-card" onclick="addToCart('${p.sku}')">
-      <div class="product-emoji">${p.emoji || '📦'}</div>
+      <div class="product-emoji">${ICON_MAP[p.sku] ? `<img src="${ICON_MAP[p.sku]}" alt="">` : (p.emoji || '📦')}</div>
       <div class="product-name">${p.name}</div>
       <div class="product-desc">${p.description || ''}</div>
       <div class="product-price">¥${p.price.toLocaleString()}</div>
@@ -464,7 +479,7 @@ function renderCart() {
 
   cartList.innerHTML = items.map(({ product: p, qty }) => `
     <div class="cart-item">
-      <div class="cart-item-name">${p.emoji || ''} ${p.name}</div>
+      <div class="cart-item-name">${p.name}</div>
       <div class="qty-ctrl">
         <button class="qty-btn" onclick="changeQty('${p.sku}', -1)">−</button>
         <div class="qty-num">${qty}</div>
