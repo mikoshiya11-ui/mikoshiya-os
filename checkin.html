@@ -110,6 +110,65 @@
     text-decoration: none;
     cursor: pointer;
   }
+
+  /* ===== 新規会員セルフ登録カード（RPG風・他カードとは意図的に差別化） ===== */
+  #registerCard {
+    background:
+      radial-gradient(ellipse 120% 80% at 50% -10%, #24365f 0%, #16223f 45%, #0a1428 100%);
+    border: 2px solid #d4af37;
+    box-shadow: 0 18px 50px rgba(0,0,0,.45), inset 0 0 0 1px rgba(243,217,123,.18);
+  }
+  .reg-badge {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    color: #f3d97b;
+    margin-bottom: 14px;
+    text-shadow: 0 1px 3px rgba(0,0,0,.5);
+  }
+  #registerCard .result-icon { margin-bottom: 10px; }
+  #registerCard .result-title { color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,.5); }
+  #registerCard .result-msg { color: #c9d3ec; margin-bottom: 20px; }
+  .reg-input {
+    width: 100%;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    border: 1.5px solid #d4af37;
+    border-radius: 10px;
+    background: rgba(255,255,255,.96);
+    font-size: 15px;
+    text-align: center;
+    color: #16213e;
+    font-weight: 600;
+  }
+  .reg-input:focus {
+    outline: none;
+    border-color: #f3d97b;
+    box-shadow: 0 0 0 3px rgba(243,217,123,.28);
+  }
+  .btn-register {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid #d4af37;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #f6e27a, #d4af37);
+    color: #1c2c52;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #a9821f, 0 5px 10px rgba(0,0,0,.3);
+    transition: transform 0.1s, box-shadow 0.1s, opacity 0.15s;
+  }
+  .btn-register:active {
+    transform: translateY(3px);
+    box-shadow: 0 0 0 #a9821f;
+  }
+  .btn-register:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+  }
+  #registerCard .error-msg { margin-top: 14px; }
 </style>
 </head>
 <body>
@@ -153,6 +212,16 @@
   <a href="member-card.html" class="btn-link">会員証を見る</a>
 </div>
 
+<div class="card" id="registerCard" style="display:none">
+  <div class="reg-badge">✦ NEW ADVENTURER ✦</div>
+  <div class="result-icon">🗺️</div>
+  <div class="result-title">ようこそ、はじめての方ですね</div>
+  <div class="result-msg">お名前を入力してください</div>
+  <input type="text" id="registerName" class="reg-input" placeholder="お名前" autocomplete="off">
+  <button class="btn-register" id="btnRegister">登録して入室する</button>
+  <div class="error-msg" id="registerError"></div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://ashoqzwxgaovepclbawf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzaG9xend4Z2FvdmVwY2xiYXdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2OTk2MTMsImV4cCI6MjEwMTI3NTYxM30.Ke1Fa8MSTwj3OFH5mrh2ViPFCq4GUpYQh5vegyGbMLQ';
@@ -160,6 +229,7 @@ const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let handled = false;
+let pendingUser = null;
 
 // 日本時間（Asia/Tokyo）基準でvisits.dateへ保存する日付を生成する（Phase 6.5）
 function getJSTDateString(d = new Date()) {
@@ -186,12 +256,84 @@ function showError(msg) {
 function showResult(icon, title, msg, time) {
   document.getElementById('processingCard').style.display = 'none';
   document.getElementById('loginCard').style.display = 'none';
+  document.getElementById('registerCard').style.display = 'none';
   document.getElementById('resultIcon').textContent = icon;
   document.getElementById('resultTitle').textContent = title;
   document.getElementById('resultMsg').textContent = msg;
   document.getElementById('resultTime').textContent = time || '';
   document.getElementById('resultCard').style.display = 'block';
 }
+
+function showRegisterForm() {
+  document.getElementById('processingCard').style.display = 'none';
+  document.getElementById('loginCard').style.display = 'none';
+  document.getElementById('resultCard').style.display = 'none';
+  document.getElementById('registerCard').style.display = 'block';
+  document.getElementById('registerName').focus();
+}
+
+// 新規会員のセルフ登録（見つからなかった場合のみ呼ばれる）。
+// membersテーブルへのINSERTはSupabase側のRLSで「rank=一般 / active=true / plan=dropin、
+// かつemail or line_idが自分自身のJWTと一致する場合のみ」に制限されているため、
+// 他人になりすました登録や権限昇格はできない。会員IDはDB側のトリガーで自動採番されるため、
+// クライアントから他会員の一覧を読み取る必要がなく、他会員の情報は一切やり取りしない。
+async function submitRegister() {
+  const btn = document.getElementById('btnRegister');
+  const nameInput = document.getElementById('registerName');
+  const name = nameInput.value.trim();
+  const errEl = document.getElementById('registerError');
+  errEl.style.display = 'none';
+
+  if (!name) {
+    errEl.textContent = 'お名前を入力してください';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!pendingUser) return;
+
+  btn.disabled = true;
+  btn.textContent = '登録中...';
+
+  const { user, isLine } = pendingUser;
+  const row = {
+    name,
+    plan: 'dropin',
+    rank: '一般',
+    active: true,
+    email: isLine ? null : user.email,
+    line_id: isLine ? (user.user_metadata?.sub || null) : null
+  };
+
+  const { data: inserted, error } = await sb.from('members').insert(row).select().maybeSingle();
+
+  if (error || !inserted) {
+    btn.disabled = false;
+    btn.textContent = '登録して入室する';
+    errEl.textContent = '登録に失敗しました。もう一度お試しください。';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const today = getJSTDateString();
+  const now = new Date();
+  const { error: visitError } = await sb.from('visits').insert({
+    member_id: inserted.id,
+    date: today,
+    enter_time: now.toTimeString().split(' ')[0]
+  });
+
+  if (visitError) {
+    showResult('⚠️', 'エラー', visitError.message, '');
+    return;
+  }
+
+  showResult('✅', `${inserted.name}さん`, 'ご登録ありがとうございます！入室を記録しました。', now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }));
+}
+
+document.getElementById('btnRegister').addEventListener('click', submitRegister);
+document.getElementById('registerName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitRegister();
+});
 
 async function handleUser(user) {
   if (handled) return;
@@ -208,7 +350,8 @@ async function handleUser(user) {
   }
 
   if (!member) {
-    showResult('❓', '会員登録が見つかりません', 'スタッフへお声がけください。', '');
+    pendingUser = { user, isLine };
+    showRegisterForm();
     return;
   }
 
