@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ã¹ã¿ããã«ã¼ã  â MIKOSHIYA</title>
+<title>スタッフルーム — MIKOSHIYA</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -46,7 +46,7 @@
   }
   .top-bar .title::before,
   .top-bar .title::after {
-    content: 'â';
+    content: '◆';
     font-size: 11px;
     color: #7ec8ff;
     -webkit-text-fill-color: #7ec8ff;
@@ -71,7 +71,7 @@
     border: 2px solid #d4af37;
   }
 
-  /* ã¿ã */
+  /* タブ */
   .tabs {
     display: flex;
     gap: 14px;
@@ -107,7 +107,7 @@
   .tab-content { display: none; padding: 16px; max-width: 640px; margin: 0 auto; }
   .tab-content.active { display: block; }
 
-  /* ã«ã¼ã */
+  /* カード */
   .card {
     background: #fff;
     border-radius: 14px;
@@ -122,7 +122,7 @@
     margin-bottom: 14px;
   }
 
-  /* QRã¹ã­ã£ã³å¥å */
+  /* QRスキャン入力 */
   .qr-input-area {
     display: flex; gap: 8px;
   }
@@ -170,7 +170,7 @@
     cursor: pointer;
   }
 
-  /* ã¡ã³ãã¼ç¢ºèªããã« */
+  /* メンバー確認パネル */
   #memberPanel {
     background: #e8f0fe;
     border-radius: 12px;
@@ -182,7 +182,7 @@
   #memberPanel .meta { font-size: 13px; color: #555; margin-bottom: 12px; }
   #memberPanel .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  /* æ¬æ¥ã®æ¥è¨ªä¸è¦§ */
+  /* 本日の来訪一覧 */
   .visit-row {
     display: grid;
     grid-template-columns: 1fr 80px 80px auto;
@@ -205,7 +205,7 @@
   .status-in { background: #e8f5e9; color: #2e7d32; }
   .status-out { background: #f5f5f5; color: #888; }
 
-  /* æ³¨æä¸è¦§ */
+  /* 注文一覧 */
   .order-row {
     display: flex;
     justify-content: space-between;
@@ -215,7 +215,7 @@
   }
   .order-row:last-child { border-bottom: none; }
 
-  /* çµ±è¨ */
+  /* 統計 */
   .stats-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -231,7 +231,7 @@
   .stat-num { font-size: 26px; font-weight: 700; color: #0f3460; }
   .stat-label { font-size: 11px; color: #888; margin-top: 2px; }
 
-  /* ä¼å¡ä¸è¦§ */
+  /* 会員一覧 */
   .member-search {
     width: 100%; padding: 10px 12px;
     border: 1.5px solid #eee; border-radius: 10px;
@@ -279,7 +279,7 @@
   .line-yes { background: #06c755; }
   .line-no { background: #ddd; }
 
-  /* ä¼å¡è©³ç´°ã¢ã¼ãã« */
+  /* 会員詳細モーダル */
   .detail-field { margin-bottom: 8px; }
   .detail-field label { font-size: 11px; color: #888; display: block; margin-bottom: 2px; }
   .detail-field .val { font-size: 14px; color: #222; }
@@ -287,7 +287,7 @@
 
   .empty { font-size: 13px; color: #bbb; text-align: center; padding: 20px 0; }
 
-  /* ã¢ã¼ãã« */
+  /* モーダル */
   .modal-backdrop {
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.4);
@@ -317,7 +317,7 @@
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
   .btn-cancel { padding: 10px 16px; background: #f5f5f5; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
 
-  /* ===== åéºèåä»ï¼å¥éå®¤ã¿ãï¼RPGå Phase1 ===== */
+  /* ===== 冒険者受付（入退室タブ）RPG化 Phase1 ===== */
   #tab-checkin .card {
     background: linear-gradient(180deg, #f7edd2, #ecdfb3);
     border: 3px solid #d4af37;
@@ -346,7 +346,7 @@
     color: #f3d97b;
     white-space: nowrap;
   }
-  .guild-ribbon::before, .guild-ribbon::after { content:'â'; font-size:10px; color:#7ec8ff; }
+  .guild-ribbon::before, .guild-ribbon::after { content:'◆'; font-size:10px; color:#7ec8ff; }
   #tab-checkin .card-title {
     text-align: center;
     color: #6b5324;
@@ -376,193 +376,193 @@
 </head>
 <body>
 <div id="loading-overlay" style="position:fixed;inset:0;background:#f0f0eb;display:flex;align-items:center;justify-content:center;font-size:14px;color:#888;z-index:100">
-  èªè¨¼ç¢ºèªä¸­...
+  認証確認中...
 </div>
 
 <div id="app" style="display:none">
   <div class="top-bar">
     <div>
-      <div class="title">MIKOSHIYA ã®ã«ãæ¬é¨</div>
-      <div class="date" id="todayDate">â</div>
+      <div class="title">MIKOSHIYA ギルド本部</div>
+      <div class="date" id="todayDate">—</div>
     </div>
     <div style="display:flex;gap:8px">
-      <a href="member-card.html" class="btn-sm btn-logout" style="text-decoration:none;display:inline-block">ðªª ä¼å¡è¨¼</a>
-      <button class="btn-sm btn-logout" id="btnLogout">ã­ã°ã¢ã¦ã</button>
+      <a href="member-card.html" class="btn-sm btn-logout" style="text-decoration:none;display:inline-block">🪪 会員証</a>
+      <button class="btn-sm btn-logout" id="btnLogout">ログアウト</button>
     </div>
   </div>
 
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('checkin')">å¥éå®¤</div>
-    <div class="tab" onclick="switchTab('today')">æ¬æ¥ (<span id="todayCount">0</span>)</div>
-    <div class="tab" onclick="switchTab('orders')">æ³¨æ</div>
-    <div class="tab" onclick="switchTab('members')">ä¼å¡</div>
+    <div class="tab active" onclick="switchTab('checkin')">入退室</div>
+    <div class="tab" onclick="switchTab('today')">本日 (<span id="todayCount">0</span>)</div>
+    <div class="tab" onclick="switchTab('orders')">注文</div>
+    <div class="tab" onclick="switchTab('members')">会員</div>
   </div>
 
-  <!-- â  å¥éå®¤ã¿ã -->
+  <!-- ① 入退室タブ -->
   <div class="tab-content active" id="tab-checkin">
     <div class="card">
-      <div class="guild-ribbon">åéºèåä»</div>
-      <div class="card-title">QRã³ã¼ãèª­ã¿åã / ä¼å¡IDå¥å</div>
+      <div class="guild-ribbon">冒険者受付</div>
+      <div class="card-title">QRコード読み取り / 会員ID入力</div>
       <div class="qr-input-area">
-        <input type="search" class="qr-input" id="qrInput" name="qr-scan-input" placeholder="ä¼å¡ID (ä¾: A-00001)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" autofocus>
-        <button class="btn-primary" onclick="lookupMember()">ç¢ºèª</button>
+        <input type="search" class="qr-input" id="qrInput" name="qr-scan-input" placeholder="会員ID (例: A-00001)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" autofocus>
+        <button class="btn-primary" onclick="lookupMember()">確認</button>
       </div>
       <div id="memberPanel">
-        <div class="name" id="panelName">â</div>
-        <div class="meta" id="panelMeta">â</div>
+        <div class="name" id="panelName">—</div>
+        <div class="meta" id="panelMeta">—</div>
         <div class="actions">
-          <button class="btn-success" id="btnEnter" onclick="recordEnter()">â¶ å¥å®¤</button>
-          <button class="btn-danger" id="btnExit" onclick="recordExit()">â  éå®¤</button>
+          <button class="btn-success" id="btnEnter" onclick="recordEnter()">▶ 入室</button>
+          <button class="btn-danger" id="btnExit" onclick="recordExit()">■ 退室</button>
         </div>
       </div>
       <div id="actionResult" style="margin-top:12px;font-size:13px;"></div>
     </div>
   </div>
 
-  <!-- â¡ æ¬æ¥ã¿ã -->
+  <!-- ② 本日タブ -->
   <div class="tab-content" id="tab-today">
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-num" id="statIn">0</div>
-        <div class="stat-label">æ»å¨ä¸­</div>
+        <div class="stat-label">滞在中</div>
       </div>
       <div class="stat-card">
         <div class="stat-num" id="statToday">0</div>
-        <div class="stat-label">æ¬æ¥æ¥è¨ª</div>
+        <div class="stat-label">本日来訪</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num" id="statSales">Â¥0</div>
-        <div class="stat-label">æ¬æ¥å£²ä¸</div>
+        <div class="stat-num" id="statSales">¥0</div>
+        <div class="stat-label">本日売上</div>
       </div>
     </div>
     <div class="card">
-      <div class="card-title">æ¬æ¥ã®æ¥è¨ª</div>
-      <div id="todayVisitList"><div class="empty">ãã¼ã¿ãªã</div></div>
+      <div class="card-title">本日の来訪</div>
+      <div id="todayVisitList"><div class="empty">データなし</div></div>
     </div>
   </div>
 
-  <!-- â¢ æ³¨æã¿ã -->
+  <!-- ③ 注文タブ -->
   <div class="tab-content" id="tab-orders">
     <div class="card">
-      <div class="card-title">æªå¦çã®æ³¨æ</div>
-      <div id="orderList"><div class="empty">æªå¦çã®æ³¨æã¯ããã¾ãã</div></div>
+      <div class="card-title">未処理の注文</div>
+      <div id="orderList"><div class="empty">未処理の注文はありません</div></div>
     </div>
   </div>
 
-  <!-- â£ ä¼å¡ã¿ã -->
+  <!-- ④ 会員タブ -->
   <div class="tab-content" id="tab-members">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div class="card-title" style="margin-bottom:0">ä¼å¡ä¸è¦§ (<span id="memberCount">0</span>äºº)</div>
-        <button class="btn-primary btn-sm" onclick="openAddMember()" style="font-size:12px;padding:6px 12px">ï¼è¿½å </button>
+        <div class="card-title" style="margin-bottom:0">会員一覧 (<span id="memberCount">0</span>人)</div>
+        <button class="btn-primary btn-sm" onclick="openAddMember()" style="font-size:12px;padding:6px 12px">＋追加</button>
       </div>
-      <input type="text" class="member-search" id="memberSearch" placeholder="ååã»IDã»LINEã§æ¤ç´¢..." oninput="filterMembers()">
+      <input type="text" class="member-search" id="memberSearch" placeholder="名前・ID・LINEで検索..." oninput="filterMembers()">
       <div class="member-filter-row">
-        <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">å¨å¡</button>
-        <button class="filter-btn" data-filter="ç¹å¥ä¼å¡" onclick="setFilter('ç¹å¥ä¼å¡',this)">ç¹å¥ä¼å¡</button>
-        <button class="filter-btn" data-filter="ä¸è¬" onclick="setFilter('ä¸è¬',this)">ä¸è¬</button>
-        <button class="filter-btn" data-filter="line" onclick="setFilter('line',this)">LINEæ</button>
-        <button class="filter-btn" data-filter="noline" onclick="setFilter('noline',this)">LINEç¡</button>
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">全員</button>
+        <button class="filter-btn" data-filter="特別会員" onclick="setFilter('特別会員',this)">特別会員</button>
+        <button class="filter-btn" data-filter="一般" onclick="setFilter('一般',this)">一般</button>
+        <button class="filter-btn" data-filter="line" onclick="setFilter('line',this)">LINE有</button>
+        <button class="filter-btn" data-filter="noline" onclick="setFilter('noline',this)">LINE無</button>
       </div>
-      <div id="memberList"><div class="empty">èª­ã¿è¾¼ã¿ä¸­...</div></div>
+      <div id="memberList"><div class="empty">読み込み中...</div></div>
     </div>
   </div>
 </div>
 
-<!-- ä¼å¡è©³ç´°ã¢ã¼ãã« -->
+<!-- 会員詳細モーダル -->
 <div class="modal-backdrop" id="memberDetailModal">
   <div class="modal" style="max-width:420px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 style="margin:0" id="detailTitle">ä¼å¡è©³ç´°</h3>
-      <button class="btn-cancel" onclick="closeDetailModal()" style="padding:6px 10px">â</button>
+      <h3 style="margin:0" id="detailTitle">会員詳細</h3>
+      <button class="btn-cancel" onclick="closeDetailModal()" style="padding:6px 10px">✕</button>
     </div>
-    <!-- è¡¨ç¤ºã¢ã¼ã -->
+    <!-- 表示モード -->
     <div id="detailView">
-      <div class="detail-field"><label>ä¼å¡ID</label><div class="val" id="dId">â</div></div>
-      <div class="detail-field"><label>åå</label><div class="val" id="dName">â</div></div>
-      <div class="detail-field"><label>ã¡ã¼ã«</label><div class="val" id="dEmail">â</div></div>
-      <div class="detail-field"><label>ã©ã³ã¯</label><div class="val" id="dRank">â</div></div>
-      <div class="detail-field"><label>ãã©ã³</label><div class="val" id="dPlan">â</div></div>
-      <div class="detail-field"><label>LINEè¡¨ç¤ºå</label><div class="val" id="dLineName">â</div></div>
-      <div class="detail-field"><label>LINE ID</label><div class="val" id="dLineId" style="font-size:11px;word-break:break-all;color:#888">â</div></div>
-      <div class="detail-field"><label>ã¹ãã¼ã¿ã¹</label><div class="val" id="dActive">â</div></div>
+      <div class="detail-field"><label>会員ID</label><div class="val" id="dId">—</div></div>
+      <div class="detail-field"><label>名前</label><div class="val" id="dName">—</div></div>
+      <div class="detail-field"><label>メール</label><div class="val" id="dEmail">—</div></div>
+      <div class="detail-field"><label>ランク</label><div class="val" id="dRank">—</div></div>
+      <div class="detail-field"><label>プラン</label><div class="val" id="dPlan">—</div></div>
+      <div class="detail-field"><label>LINE表示名</label><div class="val" id="dLineName">—</div></div>
+      <div class="detail-field"><label>LINE ID</label><div class="val" id="dLineId" style="font-size:11px;word-break:break-all;color:#888">—</div></div>
+      <div class="detail-field"><label>ステータス</label><div class="val" id="dActive">—</div></div>
       <hr class="detail-sep">
       <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button class="btn-cancel" onclick="closeDetailModal()">éãã</button>
-        <button class="btn-primary" onclick="switchToEdit()">ç·¨é</button>
+        <button class="btn-cancel" onclick="closeDetailModal()">閉じる</button>
+        <button class="btn-primary" onclick="switchToEdit()">編集</button>
       </div>
     </div>
-    <!-- ç·¨éã¢ã¼ã -->
+    <!-- 編集モード -->
     <div id="detailEdit" style="display:none">
-      <div class="form-group"><label>åå</label><input type="text" id="editName"></div>
-      <div class="form-group"><label>ã¡ã¼ã« (Googleã¢ã«ã¦ã³ã)</label><input type="email" id="editEmail"></div>
+      <div class="form-group"><label>名前</label><input type="text" id="editName"></div>
+      <div class="form-group"><label>メール (Googleアカウント)</label><input type="email" id="editEmail"></div>
       <div class="form-group">
-        <label>ã©ã³ã¯</label>
+        <label>ランク</label>
         <select id="editRank">
-          <option value="ä¸è¬">ä¸è¬</option>
-          <option value="ç¹å¥ä¼å¡">ç¹å¥ä¼å¡</option>
-          <option value="ã¹ã¿ãã">ã¹ã¿ãã</option>
-          <option value="ãªã¼ãã¼">ãªã¼ãã¼</option>
+          <option value="一般">一般</option>
+          <option value="特別会員">特別会員</option>
+          <option value="スタッフ">スタッフ</option>
+          <option value="オーナー">オーナー</option>
         </select>
       </div>
       <div class="form-group">
-        <label>ãã©ã³</label>
+        <label>プラン</label>
         <select id="editPlan">
-          <option value="dropin">ãã­ããã¤ã³</option>
-          <option value="monthly">æé¡</option>
+          <option value="dropin">ドロップイン</option>
+          <option value="monthly">月額</option>
         </select>
       </div>
       <div class="form-group">
-        <label>ã¹ãã¼ã¿ã¹</label>
+        <label>ステータス</label>
         <select id="editActive">
-          <option value="true">æå¹</option>
-          <option value="false">ç¡å¹</option>
+          <option value="true">有効</option>
+          <option value="false">無効</option>
         </select>
       </div>
       <hr class="detail-sep">
       <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button class="btn-cancel" onclick="switchToView()">ã­ã£ã³ã»ã«</button>
-        <button class="btn-primary" onclick="saveMemberEdit()">ä¿å­</button>
+        <button class="btn-cancel" onclick="switchToView()">キャンセル</button>
+        <button class="btn-primary" onclick="saveMemberEdit()">保存</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ä¼å¡è¿½å ã¢ã¼ãã« -->
+<!-- 会員追加モーダル -->
 <div class="modal-backdrop" id="addMemberModal">
   <div class="modal">
-    <h3>ä¼å¡ãè¿½å </h3>
+    <h3>会員を追加</h3>
     <div class="form-group">
-      <label>ä¼å¡ID (A-XXXXXå½¢å¼)</label>
+      <label>会員ID (A-XXXXX形式)</label>
       <input type="text" id="newMemberId" placeholder="A-00066">
     </div>
     <div class="form-group">
-      <label>åå</label>
-      <input type="text" id="newMemberName" placeholder="å±±ç° å¤ªé">
+      <label>名前</label>
+      <input type="text" id="newMemberName" placeholder="山田 太郎">
     </div>
     <div class="form-group">
-      <label>ã¡ã¼ã« (Googleã¢ã«ã¦ã³ã)</label>
+      <label>メール (Googleアカウント)</label>
       <input type="email" id="newMemberEmail" placeholder="example@gmail.com">
     </div>
     <div class="form-group">
-      <label>ãã©ã³</label>
+      <label>プラン</label>
       <select id="newMemberPlan">
-        <option value="dropin">ãã­ããã¤ã³</option>
-        <option value="monthly">æé¡</option>
+        <option value="dropin">ドロップイン</option>
+        <option value="monthly">月額</option>
       </select>
     </div>
     <div class="form-group">
-      <label>ã©ã³ã¯</label>
+      <label>ランク</label>
       <select id="newMemberRank">
-        <option value="ä¸è¬">ä¸è¬</option>
-        <option value="ç¹å¥ä¼å¡">ç¹å¥ä¼å¡</option>
-        <option value="ã¹ã¿ãã">ã¹ã¿ãã</option>
-        <option value="ãªã¼ãã¼">ãªã¼ãã¼</option>
+        <option value="一般">一般</option>
+        <option value="特別会員">特別会員</option>
+        <option value="スタッフ">スタッフ</option>
+        <option value="オーナー">オーナー</option>
       </select>
     </div>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">ã­ã£ã³ã»ã«</button>
-      <button class="btn-primary" onclick="saveMember()">ä¿å­</button>
+      <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn-primary" onclick="saveMember()">保存</button>
     </div>
   </div>
 </div>
@@ -576,7 +576,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentMember = null;
 let currentVisitId = null;
 
-// æ¥æ¬æéï¼Asia/Tokyoï¼åºæºã§visits.dateã¸ä¿å­ã»ç§åããæ¥ä»ãçæããï¼Phase 6.5ï¼
+// 日本時間（Asia/Tokyo）基準でvisits.dateへ保存・照合する日付を生成する（Phase 6.5）
 function getJSTDateString(d = new Date()) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
 }
@@ -585,14 +585,14 @@ async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { location.href = 'index.html'; return; }
 
-  // ã¹ã¿ããæ¨©éãã§ãã¯ï¼LINEã­ã°ã¤ã³ã¯line_idãããä»¥å¤ã¯emailã§ç§åï¼
+  // スタッフ権限チェック（LINEログインはline_id、それ以外はemailで照合）
   const isLine = session.user.user_metadata?.provider === 'line';
   const lineId = session.user.user_metadata?.sub;
   const { data: me } = isLine
     ? await sb.from('members').select('rank').eq('line_id', lineId).maybeSingle()
     : await sb.from('members').select('rank').eq('email', session.user.email).maybeSingle();
-  if (!me || !['ã¹ã¿ãã', 'ãªã¼ãã¼'].includes(me.rank)) {
-    alert('ã¹ã¿ããå°ç¨ãã¼ã¸ã§ã');
+  if (!me || !['スタッフ', 'オーナー'].includes(me.rank)) {
+    alert('スタッフ専用ページです');
     location.href = 'member-card.html';
     return;
   }
@@ -604,22 +604,22 @@ async function init() {
   document.getElementById('todayDate').textContent =
     today.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 
-  // Enterã­ã¼ã§lookupï¼HIDã¹ã­ã£ãã¼ãæ«å°¾ã«Enter/CRãéã£ã¦ããå ´åï¼
+  // Enterキーでlookup（HIDスキャナーが末尾にEnter/CRを送ってくる場合）
   document.getElementById('qrInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') lookupMember();
   });
 
-  // ã¹ã­ã£ãã¼ãEnterãéããªãæ©ç¨®ã§ãåããããå¥åãä¸å®æéæ­¢ã¾ã£ããèªåã§lookupããã
-  // ã¹ã­ã£ãã¼ã¯å¨æå­ãããç­æéï¼æ°åmsééï¼ã§é£ç¶å¥åããããã
-  // äººãæå¥åããééãããã£ã¨ç­ã150msã§ãå¥åå®äºãã¨ã¿ãªãã¦è¯ãã
+  // スキャナーがEnterを送らない機種でも動くよう、入力が一定時間止まったら自動でlookupする。
+  // スキャナーは全文字をごく短時間（数十ms間隔）で連続入力するため、
+  // 人が手入力する間隔よりずっと短い150msで「入力完了」とみなして良い。
   let scanTimer = null;
   document.getElementById('qrInput').addEventListener('input', e => {
     clearTimeout(scanTimer);
     const val = e.target.value.trim();
     if (!val) return;
     scanTimer = setTimeout(() => {
-      // Enterã§æ¢ã«lookupMember()ãå¼ã°ãå¥åæ¬ãã¯ãªã¢ããã¦ããã±ã¼ã¹ã¨éè¤ããªãããã
-      // ãã®æç¹ã§ã¾ã å¤ãæ®ã£ã¦ããå ´åã®ã¿å®è¡ãã
+      // Enterで既にlookupMember()が呼ばれ入力欄がクリアされているケースと重複しないよう、
+      // その時点でまだ値が残っている場合のみ実行する
       if (document.getElementById('qrInput').value.trim() === val) lookupMember();
     }, 150);
   });
@@ -635,7 +635,7 @@ function switchTab(name) {
   });
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  // å¥éå®¤ã¿ãã«æ»ã£ããQR/IDå¥åæ¬ã¸ãã©ã¼ã«ã¹ãæ»ããã¹ã­ã£ãã¼ã§ããèª­ã¿åããç¶æã«ãã
+  // 入退室タブに戻ったらQR/ID入力欄へフォーカスを戻し、スキャナーですぐ読み取れる状態にする
   if (name === 'checkin') {
     document.getElementById('qrInput').focus();
   }
@@ -645,22 +645,22 @@ async function lookupMember() {
   const inputEl = document.getElementById('qrInput');
   const id = inputEl.value.trim();
   if (!id) return;
-  // ã¹ã­ã£ãã¼(ã­ã¼ãã¼ãå¥åå)ã§é£ç¶ã¹ã­ã£ã³ãã¦ãå¤ãé£çµãããªãããã
-  // èª­ã¿åã£ãå¤ãä½¿ã£ãç´å¾ã«å¥åæ¬ãã¯ãªã¢ãã¦ãã©ã¼ã«ã¹ãæ»ãã¦ãã
+  // スキャナー(キーボード入力型)で連続スキャンしても値が連結されないよう、
+  // 読み取った値を使った直後に入力欄をクリアしてフォーカスを戻しておく
   inputEl.value = '';
   inputEl.focus();
 
   const { data: member } = await sb.from('members').select('*').eq('id', id).single();
   if (!member) {
     document.getElementById('memberPanel').style.display = 'none';
-    document.getElementById('actionResult').innerHTML = '<span style="color:#d32f2f">ä¼å¡ãè¦ã¤ããã¾ãã: ' + id + '</span>';
+    document.getElementById('actionResult').innerHTML = '<span style="color:#d32f2f">会員が見つかりません: ' + id + '</span>';
     inputEl.focus();
     return;
   }
 
   currentMember = member;
 
-  // ä»æ¥ã®ã¢ã¯ãã£ããª visit ãç¢ºèª
+  // 今日のアクティブな visit を確認
   const today = getJSTDateString();
   const { data: visits } = await sb.from('visits')
     .select('*').eq('member_id', id).eq('date', today).is('exit_time', null);
@@ -668,8 +668,8 @@ async function lookupMember() {
 
   document.getElementById('panelName').textContent = member.name || id;
   document.getElementById('panelMeta').textContent =
-    `${member.id} ï¼ ${member.plan === 'monthly' ? 'æé¡' : 'ãã­ããã¤ã³'} ï¼ ${member.rank}` +
-    (currentVisitId ? ' ãæ»å¨ä¸­ã' : '');
+    `${member.id} ／ ${member.plan === 'monthly' ? '月額' : 'ドロップイン'} ／ ${member.rank}` +
+    (currentVisitId ? ' 【滞在中】' : '');
 
   document.getElementById('btnEnter').disabled = !!currentVisitId;
   document.getElementById('btnExit').disabled = !currentVisitId;
@@ -677,8 +677,8 @@ async function lookupMember() {
   document.getElementById('actionResult').textContent = '';
   inputEl.focus();
 
-  // åä»ã·ã¹ãã åï¼ãã¿ã³æä½ãå¾ãããã¹ã­ã£ã³ç´å¾ã«ç¶æã«å¿ãã¦å¥å®¤/éå®¤ãèªåç¢ºå®ãã
-  // ï¼ãã¿ã³ã¯ä¸ä¸ã®ã¨ã©ã¼æãªã©ã«æåã§åå®è¡ã§ããããæ®ãã¦ããï¼
+  // 受付システム化：ボタン操作を待たず、スキャン直後に状態に応じて入室/退室を自動確定する
+  // （ボタンは万一のエラー時などに手動で再実行できるよう残してある）
   if (currentVisitId) {
     await recordExit();
   } else {
@@ -695,11 +695,11 @@ async function recordEnter() {
     enter_time: now.toTimeString().split(' ')[0]
   }).select().single();
 
-  if (error) { document.getElementById('actionResult').textContent = 'ã¨ã©ã¼: ' + error.message; document.getElementById('qrInput').focus(); return; }
+  if (error) { document.getElementById('actionResult').textContent = 'エラー: ' + error.message; document.getElementById('qrInput').focus(); return; }
   currentVisitId = data.id;
   document.getElementById('btnEnter').disabled = true;
   document.getElementById('btnExit').disabled = false;
-  document.getElementById('actionResult').innerHTML = '<span style="color:#2e7d32">â å¥å®¤è¨é²ãã¾ãã</span>';
+  document.getElementById('actionResult').innerHTML = '<span style="color:#2e7d32">✅ 入室記録しました</span>';
   document.getElementById('qrInput').value = '';
   document.getElementById('qrInput').focus();
   loadTodayData();
@@ -710,7 +710,7 @@ async function recordExit() {
   const now = new Date();
   const exitTime = now.toTimeString().split(' ')[0];
 
-  // æ»å¨æéè¨ç®ã®ããå¥å®¤æå»åå¾
+  // 滞在時間計算のため入室時刻取得
   const { data: visit } = await sb.from('visits').select('enter_time').eq('id', currentVisitId).single();
   let stayMinutes = null;
   let seatFee = 0;
@@ -719,8 +719,8 @@ async function recordExit() {
     const [eh, em, es] = visit.enter_time.split(':').map(Number);
     const [xh, xm] = exitTime.split(':').map(Number);
     stayMinutes = (xh * 60 + xm) - (eh * 60 + em);
-    // ãã­ããã¤ã³ 30å198åï¼ç¨è¾¼ï¼ã1æ¥ä¸é1,980åï¼ç¨è¾¼ï¼
-    // 5åä»¥åã®æ»å¨ã¯èª¤ã¹ã­ã£ã³ç­ã®å¯è½æ§ãèæ®ãã¦ç¡æ
+    // ドロップイン 30分198円（税込）、1日上限1,980円（税込）
+    // 5分以内の滞在は誤スキャン等の可能性を考慮して無料
     if (currentMember.plan === 'dropin') {
       if (stayMinutes <= 5) {
         seatFee = 0;
@@ -738,13 +738,13 @@ async function recordExit() {
     total_yen: seatFee
   }).eq('id', currentVisitId);
 
-  if (error) { document.getElementById('actionResult').textContent = 'ã¨ã©ã¼: ' + error.message; document.getElementById('qrInput').focus(); return; }
+  if (error) { document.getElementById('actionResult').textContent = 'エラー: ' + error.message; document.getElementById('qrInput').focus(); return; }
 
   currentVisitId = null;
   document.getElementById('btnEnter').disabled = false;
   document.getElementById('btnExit').disabled = true;
   document.getElementById('actionResult').innerHTML =
-    `<span style="color:#1565c0">â éå®¤è¨é² ${stayMinutes}å Â¥${seatFee.toLocaleString()}</span>`;
+    `<span style="color:#1565c0">✅ 退室記録 ${stayMinutes}分 ¥${seatFee.toLocaleString()}</span>`;
   document.getElementById('qrInput').value = '';
   document.getElementById('qrInput').focus();
   document.getElementById('memberPanel').style.display = 'none';
@@ -764,24 +764,24 @@ async function loadTodayData() {
   const totalSales = visits.reduce((s, v) => s + (v.total_yen || 0), 0);
   document.getElementById('statIn').textContent = inCount;
   document.getElementById('statToday').textContent = visits.length;
-  document.getElementById('statSales').textContent = 'Â¥' + totalSales.toLocaleString();
+  document.getElementById('statSales').textContent = '¥' + totalSales.toLocaleString();
   document.getElementById('todayCount').textContent = visits.length;
 
   document.getElementById('todayVisitList').innerHTML = visits.length ? visits.map(v => `
     <div class="visit-row">
       <div>
         <div class="member-name">${v.members?.name || v.member_id}</div>
-        <div class="time">${v.enter_time?.slice(0,5)} ã ${v.exit_time?.slice(0,5) || 'â'}</div>
+        <div class="time">${v.enter_time?.slice(0,5)} 〜 ${v.exit_time?.slice(0,5) || '—'}</div>
       </div>
-      <div>${v.stay_minutes != null ? v.stay_minutes + 'å' : 'â'}</div>
-      <div>Â¥${(v.total_yen || 0).toLocaleString()}</div>
-      <div><span class="status-badge ${v.exit_time ? 'status-out' : 'status-in'}">${v.exit_time ? 'éå®¤' : 'æ»å¨ä¸­'}</span></div>
+      <div>${v.stay_minutes != null ? v.stay_minutes + '分' : '—'}</div>
+      <div>¥${(v.total_yen || 0).toLocaleString()}</div>
+      <div><span class="status-badge ${v.exit_time ? 'status-out' : 'status-in'}">${v.exit_time ? '退室' : '滞在中'}</span></div>
     </div>
-  `).join('') : '<div class="empty">æ¬æ¥ã®æ¥è¨ªã¯ããã¾ãã</div>';
+  `).join('') : '<div class="empty">本日の来訪はありません</div>';
 }
 
 async function loadOrders() {
-  // æ¬æ¥ã®æªç´ä»ãæ³¨æï¼visit_idãnullã®ãã®ï¼
+  // 本日の未紐付け注文（visit_idがnullのもの）
   const today = new Date().toISOString().split('T')[0];
   const { data: orders } = await sb.from('order_items')
     .select('*, members(name)')
@@ -792,11 +792,11 @@ async function loadOrders() {
     <div class="order-row">
       <div>
         <div style="font-weight:600">${o.members?.name || o.member_id}</div>
-        <div style="font-size:12px;color:#888">${o.product_name} Ã ${o.qty} â ${new Date(o.ordered_at).toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'})}</div>
+        <div style="font-size:12px;color:#888">${o.product_name} × ${o.qty} — ${new Date(o.ordered_at).toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'})}</div>
       </div>
-      <div style="font-weight:700">Â¥${o.subtotal.toLocaleString()}</div>
+      <div style="font-weight:700">¥${o.subtotal.toLocaleString()}</div>
     </div>
-  `).join('') : '<div class="empty">æªå¦çã®æ³¨æã¯ããã¾ãã</div>';
+  `).join('') : '<div class="empty">未処理の注文はありません</div>';
 }
 
 let allMembers = [];
@@ -804,9 +804,9 @@ let currentFilter = 'all';
 let currentDetailId = null;
 
 function rankTagClass(rank) {
-  if (rank === 'ãªã¼ãã¼') return 'rank-owner';
-  if (rank === 'ã¹ã¿ãã') return 'rank-staff';
-  if (rank === 'ç¹å¥ä¼å¡') return 'rank-special';
+  if (rank === 'オーナー') return 'rank-owner';
+  if (rank === 'スタッフ') return 'rank-staff';
+  if (rank === '特別会員') return 'rank-special';
   return 'rank-general';
 }
 
@@ -829,8 +829,8 @@ function filterMembers() { renderMembers(); }
 function renderMembers() {
   const q = (document.getElementById('memberSearch')?.value || '').toLowerCase();
   let list = allMembers.filter(m => {
-    if (currentFilter === 'ç¹å¥ä¼å¡' && m.rank !== 'ç¹å¥ä¼å¡') return false;
-    if (currentFilter === 'ä¸è¬' && m.rank !== 'ä¸è¬') return false;
+    if (currentFilter === '特別会員' && m.rank !== '特別会員') return false;
+    if (currentFilter === '一般' && m.rank !== '一般') return false;
     if (currentFilter === 'line' && !m.line_id) return false;
     if (currentFilter === 'noline' && m.line_id) return false;
     if (q) {
@@ -844,18 +844,18 @@ function renderMembers() {
     <div class="member-row" onclick="openDetail('${m.id}')">
       <div>
         <div class="id">${m.id}</div>
-        <div class="name">${m.name || m.line_display_name || 'â'}</div>
+        <div class="name">${m.name || m.line_display_name || '—'}</div>
         <div class="email" style="display:flex;align-items:center;gap:4px">
           <span class="line-dot ${m.line_id ? 'line-yes' : 'line-no'}"></span>
-          <span>${m.line_id ? (m.line_display_name || 'LINEæ') : (m.email || 'LINEç¡')}</span>
+          <span>${m.line_id ? (m.line_display_name || 'LINE有') : (m.email || 'LINE無')}</span>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-        <span class="rank-tag ${rankTagClass(m.rank)}">${m.rank || 'ä¸è¬'}</span>
-        <span style="font-size:11px;color:${m.active ? '#2e7d32' : '#d32f2f'}">${m.active ? 'â æå¹' : 'Ã ç¡å¹'}</span>
+        <span class="rank-tag ${rankTagClass(m.rank)}">${m.rank || '一般'}</span>
+        <span style="font-size:11px;color:${m.active ? '#2e7d32' : '#d32f2f'}">${m.active ? '✓ 有効' : '× 無効'}</span>
       </div>
     </div>
-  `).join('') : '<div class="empty">è©²å½ããä¼å¡ããã¾ãã</div>';
+  `).join('') : '<div class="empty">該当する会員がいません</div>';
 }
 
 function openDetail(id) {
@@ -863,13 +863,13 @@ function openDetail(id) {
   if (!m) return;
   currentDetailId = id;
   document.getElementById('dId').textContent = m.id;
-  document.getElementById('dName').textContent = m.name || 'â';
-  document.getElementById('dEmail').textContent = m.email || 'â';
-  document.getElementById('dRank').textContent = m.rank || 'â';
-  document.getElementById('dPlan').textContent = m.plan === 'monthly' ? 'æé¡' : 'ãã­ããã¤ã³';
-  document.getElementById('dLineName').textContent = m.line_display_name || 'â';
-  document.getElementById('dLineId').textContent = m.line_id || 'â';
-  document.getElementById('dActive').textContent = m.active ? 'â æå¹' : 'Ã ç¡å¹';
+  document.getElementById('dName').textContent = m.name || '—';
+  document.getElementById('dEmail').textContent = m.email || '—';
+  document.getElementById('dRank').textContent = m.rank || '—';
+  document.getElementById('dPlan').textContent = m.plan === 'monthly' ? '月額' : 'ドロップイン';
+  document.getElementById('dLineName').textContent = m.line_display_name || '—';
+  document.getElementById('dLineId').textContent = m.line_id || '—';
+  document.getElementById('dActive').textContent = m.active ? '✓ 有効' : '× 無効';
   document.getElementById('detailView').style.display = 'block';
   document.getElementById('detailEdit').style.display = 'none';
   document.getElementById('memberDetailModal').classList.add('open');
@@ -884,7 +884,7 @@ function switchToEdit() {
   if (!m) return;
   document.getElementById('editName').value = m.name || '';
   document.getElementById('editEmail').value = m.email || '';
-  document.getElementById('editRank').value = m.rank || 'ä¸è¬';
+  document.getElementById('editRank').value = m.rank || '一般';
   document.getElementById('editPlan').value = m.plan || 'dropin';
   document.getElementById('editActive').value = m.active ? 'true' : 'false';
   document.getElementById('detailView').style.display = 'none';
@@ -905,14 +905,14 @@ async function saveMemberEdit() {
     active: document.getElementById('editActive').value === 'true'
   };
   const { error } = await sb.from('members').update(updates).eq('id', currentDetailId);
-  if (error) { alert('ã¨ã©ã¼: ' + error.message); return; }
+  if (error) { alert('エラー: ' + error.message); return; }
   closeDetailModal();
   loadMembers();
 }
 
 function openAddMember() {
   document.getElementById('addMemberModal').classList.add('open');
-  // æ¬¡ã®IDãèªåå¥åï¼ç°¡æï¼
+  // 次のIDを自動入力（簡易）
   const rows = document.querySelectorAll('.member-row .id');
   if (rows.length) {
     const lastId = rows[rows.length - 1].textContent;
@@ -932,10 +932,10 @@ async function saveMember() {
   const plan = document.getElementById('newMemberPlan').value;
   const rank = document.getElementById('newMemberRank').value;
 
-  if (!id || !name) { alert('ä¼å¡IDã¨ååã¯å¿é ã§ã'); return; }
+  if (!id || !name) { alert('会員IDと名前は必須です'); return; }
 
   const { error } = await sb.from('members').insert({ id, name, email, plan, rank });
-  if (error) { alert('ã¨ã©ã¼: ' + error.message); return; }
+  if (error) { alert('エラー: ' + error.message); return; }
 
   closeModal();
   loadMembers();
