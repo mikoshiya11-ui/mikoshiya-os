@@ -8,47 +8,104 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
-    background: #f0f0eb;
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    background-color: #120c08;
+    background-image:
+      linear-gradient(rgba(8,12,22,0.62), rgba(8,12,22,0.62)),
+      url('assets/bg_left.jpg'),
+      url('assets/bg_right.jpg'),
+      url('assets/bg_floor.jpg'),
+      radial-gradient(ellipse 120% 60% at 50% -10%, #3a2a18 0%, #241a10 40%, #120c08 80%, #0a0704 100%);
+    background-position: center, left top, right top, center bottom, center;
+    background-size: cover, auto 100%, auto 100%, 100% auto, cover;
+    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+    background-attachment: fixed, fixed, fixed, fixed, fixed;
     min-height: 100vh;
     padding: 0 0 80px;
   }
   .top-bar {
-    background: #1a1a2e;
+    position: relative;
+    background: linear-gradient(180deg, #1c2c52, #0e1730);
     color: #fff;
-    padding: 16px 20px;
+    padding: 18px 32px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 3px solid #d4af37;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.45);
   }
-  .top-bar .title { font-size: 16px; font-weight: 700; }
-  .top-bar .date { font-size: 12px; color: #aab; }
+  .top-bar .title {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(180deg,#f6e27a,#d4af37);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .top-bar .title::before,
+  .top-bar .title::after {
+    content: '◆';
+    font-size: 11px;
+    color: #7ec8ff;
+    -webkit-text-fill-color: #7ec8ff;
+  }
+  .top-bar .date {
+    font-size: 13px;
+    color: #cbd5f5;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+  }
   .btn-sm {
-    font-size: 12px; padding: 6px 12px;
+    font-size: 12px; padding: 8px 16px;
     border-radius: 8px; border: none; cursor: pointer;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    transition: opacity .15s;
   }
-  .btn-logout { background: rgba(255,255,255,0.1); color: #fff; }
+  .btn-sm:hover { opacity: 0.85; }
+  .btn-logout {
+    background: linear-gradient(180deg, #1c2c52, #0e1730);
+    color: #f3d97b;
+    border: 2px solid #d4af37;
+  }
 
   /* タブ */
   .tabs {
     display: flex;
-    background: #fff;
-    border-bottom: 2px solid #f0f0f0;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    background: linear-gradient(180deg,#101b36,#0a1226);
+    padding: 16px 20px;
+    border-bottom: 3px solid #d4af37;
     overflow-x: auto;
     scrollbar-width: none;
   }
   .tab {
-    padding: 12px 20px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #888;
+    padding: 11px 30px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #b9c6ea;
     cursor: pointer;
     white-space: nowrap;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
+    background: linear-gradient(180deg,#1c2c52,#0e1730);
+    border: 2px solid rgba(212,175,55,0.45);
+    border-radius: 8px;
+    transition: all .15s;
   }
-  .tab.active { color: #0f3460; border-bottom-color: #0f3460; }
+  .tab:hover:not(.active) { border-color: #d4af37; color: #f3d97b; }
+  .tab.active {
+    color: #3b2a06;
+    background: linear-gradient(180deg,#f6e27a,#d4af37);
+    border-color: #fff2b0;
+    box-shadow: 0 0 16px rgba(246,226,122,0.55), 0 0 0 1px rgba(255,255,255,0.15) inset;
+  }
 
   .tab-content { display: none; padding: 16px; max-width: 640px; margin: 0 auto; }
   .tab-content.active { display: block; }
@@ -262,6 +319,62 @@
   .form-group input:focus, .form-group select:focus { border-color: #0f3460; }
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
   .btn-cancel { padding: 10px 16px; background: #f5f5f5; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+
+  /* ===== 冒険者受付（入退室タブ）RPG化 Phase1 ===== */
+  #tab-checkin .card {
+    background: linear-gradient(180deg, #f7edd2, #ecdfb3);
+    border: 3px solid #d4af37;
+    border-radius: 16px;
+    padding: 40px 32px 28px;
+    margin-top: 44px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.4);
+    position: relative;
+  }
+  .guild-ribbon {
+    position: absolute;
+    left: 50%;
+    top: -26px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 30px;
+    background: linear-gradient(180deg, #1c2c52, #0e1730);
+    border: 2px solid #d4af37;
+    border-radius: 6px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    color: #f3d97b;
+    white-space: nowrap;
+  }
+  .guild-ribbon::before, .guild-ribbon::after { content:'◆'; font-size:10px; color:#7ec8ff; }
+  #tab-checkin .card-title {
+    text-align: center;
+    color: #6b5324;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+  }
+  #tab-checkin .qr-input {
+    background: #fffaf0;
+    border: 2px solid #c9a227;
+    color: #3b2a06;
+  }
+  #tab-checkin .qr-input:focus { border-color: #8a6a10; }
+  #tab-checkin .btn-primary {
+    background: linear-gradient(180deg, #1c2c52, #0e1730);
+    border: 2px solid #d4af37;
+    color: #f3d97b;
+  }
+  #tab-checkin .btn-primary:hover { opacity: 0.88; }
+  #tab-checkin #memberPanel {
+    background: rgba(255,255,255,0.55);
+    border: 1.5px solid #c9a227;
+  }
+  #tab-checkin #memberPanel .name { color: #3b2a06; }
+  #tab-checkin #memberPanel .meta { color: #6b5324; }
 </style>
 </head>
 <body>
@@ -272,7 +385,7 @@
 <div id="app" style="display:none">
   <div class="top-bar">
     <div>
-      <div class="title">🏠 スタッフルーム</div>
+      <div class="title">MIKOSHIYA ギルド本部</div>
       <div class="date" id="todayDate">—</div>
     </div>
     <div style="display:flex;gap:8px">
@@ -291,6 +404,7 @@
   <!-- ① 入退室タブ -->
   <div class="tab-content active" id="tab-checkin">
     <div class="card">
+      <div class="guild-ribbon">冒険者受付</div>
       <div class="card-title">QRコード読み取り / 会員ID入力</div>
       <div class="qr-input-area">
         <input type="search" class="qr-input" id="qrInput" name="qr-scan-input" placeholder="会員ID (例: A-00001)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" autofocus>
