@@ -294,7 +294,19 @@ async function submitRegister() {
   btn.disabled = true;
   btn.textContent = '登録中...';
 
-  const { user, isLine } = pendingUser;
+  const { isLine } = pendingUser;
+  // Googleログイン直後はSupabase側がプロフィール（email）を反映しきれていないことがあるため、送信時点で最新のユーザー情報を取得し直す。
+  const { data: { user: freshUser } } = await sb.auth.getUser();
+  const user = freshUser || pendingUser.user;
+
+  if (!isLine && !user.email) {
+    btn.disabled = false;
+    btn.textContent = '登録して入室する';
+    errEl.textContent = '登録に失敗しました。もう一度お試しください。';
+    errEl.style.display = 'block';
+    return;
+  }
+
   const row = {
     name,
     plan: 'dropin',
