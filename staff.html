@@ -715,26 +715,13 @@ async function recordExit() {
   let stayMinutes = null;
   let seatFee = 0;
 
-  // 本日、MeetingRoom（sku: C003）の注文があるか確認する。
-  // ある場合はコワーキングスペースとしての通常滞在料金（ドロップイン時間制課金）を免除し、
-  // MeetingRoom自体の注文金額のみが請求されるようにする。
-  let hasMeetingRoom = false;
-  if (currentMember) {
-    const todayJST = getJSTDateString();
-    const { data: todaysOrders } = await sb.from('order_items')
-      .select('sku')
-      .eq('member_id', currentMember.id)
-      .gte('ordered_at', todayJST + 'T00:00:00+09:00');
-    hasMeetingRoom = (todaysOrders || []).some(o => o.sku === 'C003');
-  }
-
   if (visit?.enter_time) {
     const [eh, em, es] = visit.enter_time.split(':').map(Number);
     const [xh, xm] = exitTime.split(':').map(Number);
     stayMinutes = (xh * 60 + xm) - (eh * 60 + em);
     // ドロップイン 30分198円（税込）、1日上限1,980円（税込）
     // 5分以内の滞在は誤スキャン等の可能性を考慮して無料
-    if (currentMember.plan === 'dropin' && !hasMeetingRoom) {
+    if (currentMember.plan === 'dropin') {
       if (stayMinutes <= 5) {
         seatFee = 0;
       } else {
