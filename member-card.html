@@ -656,11 +656,6 @@ async function init() {
       .gte('ordered_at', todayStartISO);
     const purchaseTotal = (orders || []).reduce((s, o) => s + (o.subtotal || 0), 0);
 
-    // MeetingRoom（sku: C003）を注文した日は、通常のドロップイン滞在料金を免除し、
-    // MeetingRoom自体の注文金額のみが「本日の利用料金」となるようにする。
-    const hasMeetingRoom = (orders || []).some(o => o.sku === 'C003');
-    if (hasMeetingRoom) seatFee = 0;
-
     document.getElementById('statMinutes').textContent = minutes;
     document.getElementById('statFee').textContent = seatFee.toLocaleString();
     document.getElementById('statTotal').textContent = (seatFee + purchaseTotal).toLocaleString();
