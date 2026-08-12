@@ -761,14 +761,28 @@ async function recordExit() {
 async function loadTodayData() {
   const today = getJSTDateString();
   const { data: visits } = await sb.from('visits')
-    .select('*, members(name)')
+    .select('*, members(name, plan)')
     .eq('date', today)
     .order('enter_time', { ascending: false });
 
   if (!visits) return;
 
+  function estimateActiveFee(enterTime, plan) {
+    if (plan !== 'dropin' || !enterTime) return 0;
+    const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', hour12: false });
+    const parts = fmt.formatToParts(new Date());
+    const nh = parseInt(parts.find(p => p.type === 'hour').value, 10);
+    const nm = parseInt(parts.find(p => p.type === 'minute').value, 10);
+    const [eh, em] = enterTime.split(':').map(Number);
+    const minutes = (nh * 60 + nm) - (eh * 60 + em);
+    if (minutes <= 5) return 0;
+    const units = Math.ceil(minutes / 30);
+    return Math.min(units * 198, 1980);
+  }
+  const feeFor = v => v.exit_time ? (v.total_yen || 0) : estimateActiveFee(v.enter_time, v.members?.plan);
+
   const inCount = visits.filter(v => !v.exit_time).length;
-  const totalSales = visits.reduce((s, v) => s + (v.total_yen || 0), 0);
+  const totalSales = visits.reduce((s, v) => s + feeFor(v), 0);
   document.getElementById('statIn').textContent = inCount;
   document.getElementById('statToday').textContent = visits.length;
   document.getElementById('statSales').textContent = '¥' + totalSales.toLocaleString();
@@ -781,7 +795,7 @@ async function loadTodayData() {
         <div class="time">${v.enter_time?.slice(0,5)} 〜 ${v.exit_time?.slice(0,5) || '—'}</div>
       </div>
       <div>${v.stay_minutes != null ? v.stay_minutes + '分' : '—'}</div>
-      <div>¥${(v.total_yen || 0).toLocaleString()}</div>
+      <div>¥${feeFor(v).toLocaleString()}${!v.exit_time ? '（暫定）' : ''}</div>
       <div><span class="status-badge ${v.exit_time ? 'status-out' : 'status-in'}">${v.exit_time ? '退室' : '滞在中'}</span></div>
     </div>
   `).join('') : '<div class="empty">本日の来訪はありません</div>';
@@ -791,7 +805,7 @@ async function loadOrders() {
   // 本日の未紐付け注文（visit_idがnullのもの）
   const today = new Date().toISOString().split('T')[0];
   const { data: orders } = await sb.from('order_items')
-    .select('*, members(name)')
+    .select('*, members(name, plan)')
     .gte('ordered_at', today + 'T00:00:00')
     .order('ordered_at', { ascending: false });
 
