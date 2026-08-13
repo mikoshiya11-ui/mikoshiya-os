@@ -451,6 +451,7 @@
           <div class="up-label">合計(¥)</div>
         </div>
       </div>
+      <div id="meetingRoomBox" style="display:none;text-align:center;font-size:13px;font-weight:700;margin:8px 0 0;"></div>
     </div>
 
     <!-- 冒険の記録 -->
@@ -651,14 +652,35 @@ async function init() {
     // 本日の注文（購入品）を合算
     const { data: orders } = await sb
       .from('order_items')
-      .select('subtotal, sku')
+      .select('subtotal, sku, qty, ordered_at')
       .eq('member_id', member.id)
       .gte('ordered_at', todayStartISO);
     const purchaseTotal = (orders || []).reduce((s, o) => s + (o.subtotal || 0), 0);
 
+    // MeetingRoom（sku: C003）を注文した日は、通常のドロップイン滞在料金を免除し、
+    // MeetingRoom自体の注文金額のみが「本日の利用料金」となるようにする。
+    const mrOrders = (orders || []).filter(o => o.sku === 'C003');
+    const hasMeetingRoom = mrOrders.length > 0;
+    if (hasMeetingRoom) seatFee = 0;
+
     document.getElementById('statMinutes').textContent = minutes;
     document.getElementById('statFee').textContent = seatFee.toLocaleString();
     document.getElementById('statTotal').textContent = (seatFee + purchaseTotal).toLocaleString();
+
+    const mrBox = document.getElementById('meetingRoomBox');
+    if (mrBox) {
+      if (hasMeetingRoom) {
+        const totalMinutes = mrOrders.reduce((s, o) => s + (o.qty || 0) * 30, 0);
+        const firstOrder = mrOrders.reduce((min, o) => (o.ordered_at < min ? o.ordered_at : min), mrOrders[0].ordered_at);
+        const expiresAt = new Date(firstOrder).getTime() + totalMinutes * 60000;
+        const remain = Math.max(0, Math.round((expiresAt - Date.now()) / 60000));
+        mrBox.style.display = 'block';
+        mrBox.style.color = remain <= 5 ? '#d32f2f' : '#2e7d32';
+        mrBox.textContent = '🏢 MeetingRoom残り' + remain + '分' + (remain <= 5 ? '（追加購入してください）' : '');
+      } else {
+        mrBox.style.display = 'none';
+      }
+    }
   }
 
   await renderTodayUsage();
