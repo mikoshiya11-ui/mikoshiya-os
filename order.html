@@ -441,14 +441,27 @@ function renderProducts() {
   const grid = document.getElementById('productGrid');
   if (!products.length) { grid.textContent = '商品がありません'; return; }
 
-  grid.innerHTML = products.map(p => `
+  grid.innerHTML = products.map(p => {
+    const card = `
     <div class="product-card" onclick="addToCart('${p.sku}')">
       <div class="product-emoji">${ICON_MAP[p.sku] ? `<img src="${ICON_MAP[p.sku]}" alt="">` : (p.emoji || '📦')}</div>
       <div class="product-name">${p.name}</div>
       <div class="product-desc">${p.description || ''}</div>
       <div class="product-price">${p.price > 0 ? '¥' + p.price.toLocaleString() : '都度入力'}</div>
     </div>
-  `).join('');
+  `;
+    if (p.sku === 'D005') {
+      const menuCard = `
+    <a class="product-card" href="https://www.hottomotto.com/menu_list/index/23" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-decoration:none;color:inherit;">
+      <div class="product-emoji">📖</div>
+      <div class="product-name">メニューを見る</div>
+      <div class="product-desc">HottoMotto公式サイト</div>
+    </a>
+  `;
+      return card + menuCard;
+    }
+    return card;
+  }).join('');
 }
 
 function addToCart(sku) {
