@@ -446,7 +446,7 @@ function renderProducts() {
       <div class="product-emoji">${ICON_MAP[p.sku] ? `<img src="${ICON_MAP[p.sku]}" alt="">` : (p.emoji || '📦')}</div>
       <div class="product-name">${p.name}</div>
       <div class="product-desc">${p.description || ''}</div>
-      <div class="product-price">¥${p.price.toLocaleString()}</div>
+      <div class="product-price">${p.price > 0 ? '¥' + p.price.toLocaleString() : '都度入力'}</div>
     </div>
   `).join('');
 }
@@ -454,6 +454,17 @@ function renderProducts() {
 function addToCart(sku) {
   const product = products.find(p => p.sku === sku);
   if (!product) return;
+  if (sku === 'D005') {
+    const input = prompt(product.name + 'の金額を入力してください（円）', '');
+    if (input === null) return;
+    const amount = parseInt(input, 10);
+    if (!Number.isFinite(amount) || amount <= 0) { alert('正しい金額を入力してください'); return; }
+    if (!cart[sku]) cart[sku] = { product, qty: 0, customTotal: 0 };
+    cart[sku].customTotal += amount;
+    cart[sku].qty++;
+    renderCart();
+    return;
+  }
   if (!cart[sku]) cart[sku] = { product, qty: 0 };
   cart[sku].qty++;
   renderCart();
@@ -461,6 +472,12 @@ function addToCart(sku) {
 
 function changeQty(sku, delta) {
   if (!cart[sku]) return;
+  if (sku === 'D005') {
+    if (delta > 0) { addToCart(sku); return; }
+    delete cart[sku];
+    renderCart();
+    return;
+  }
   cart[sku].qty += delta;
   if (cart[sku].qty <= 0) delete cart[sku];
   renderCart();
@@ -477,7 +494,7 @@ function renderCart() {
     return;
   }
 
-  cartList.innerHTML = items.map(({ product: p, qty }) => `
+  cartList.innerHTML = items.map(({ product: p, qty, customTotal }) => `
     <div class="cart-item">
       <div class="cart-item-name">${p.name}</div>
       <div class="qty-ctrl">
@@ -485,11 +502,11 @@ function renderCart() {
         <div class="qty-num">${qty}</div>
         <button class="qty-btn" onclick="changeQty('${p.sku}', 1)">＋</button>
       </div>
-      <div class="cart-item-sub">¥${(p.price * qty).toLocaleString()}</div>
+      <div class="cart-item-sub">¥${(customTotal ?? (p.price * qty)).toLocaleString()}</div>
     </div>
   `).join('');
 
-  const total = items.reduce((s, { product: p, qty }) => s + p.price * qty, 0);
+  const total = items.reduce((s, { product: p, qty, customTotal }) => s + (customTotal ?? (p.price * qty)), 0);
   document.getElementById('totalPrice').textContent = '¥' + total.toLocaleString();
   document.getElementById('cartTotal').style.display = 'flex';
   document.getElementById('btnOrder').disabled = false;
@@ -511,15 +528,18 @@ document.getElementById('btnOrder').addEventListener('click', async () => {
   const memberId = member.id;
   const orderNum = 'ORD-' + Date.now();
 
-  const rows = items.map(({ product: p, qty }) => ({
-    member_id: memberId,
-    sku: p.sku,
-    product_name: p.name,
-    qty,
-    unit_price: p.price,
-    subtotal: p.price * qty,
-    order_num: orderNum
-  }));
+  const rows = items.map(({ product: p, qty, customTotal }) => {
+    const subtotal = customTotal ?? (p.price * qty);
+    return {
+      member_id: memberId,
+      sku: p.sku,
+      product_name: p.name,
+      qty,
+      unit_price: Math.round(subtotal / qty),
+      subtotal,
+      order_num: orderNum
+    };
+  });
 
   const { error } = await sb.from('order_items').insert(rows);
 
