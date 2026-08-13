@@ -722,13 +722,26 @@ async function recordExit() {
   let stayMinutes = null;
   let seatFee = 0;
 
+  // 本日、MeetingRoom（sku: C003）の注文があるか確認する。
+  // ある場合はコワーキングスペースとしての通常滞在料金（ドロップイン時間制課金）を免除し、
+  // MeetingRoom自体の注文金額のみが請求されるようにする。
+  let hasMeetingRoom = false;
+  if (currentMember) {
+    const todayJST = getJSTDateString();
+    const { data: todaysOrders } = await sb.from('order_items')
+      .select('sku')
+      .eq('member_id', currentMember.id)
+      .gte('ordered_at', todayJST + 'T00:00:00+09:00');
+    hasMeetingRoom = (todaysOrders || []).some(o => o.sku === 'C003');
+  }
+
   if (visit?.enter_time) {
     const [eh, em, es] = visit.enter_time.split(':').map(Number);
     const [xh, xm] = exitTime.split(':').map(Number);
     stayMinutes = (xh * 60 + xm) - (eh * 60 + em);
     // ドロップイン 30分198円（税込）、1日上限1,980円（税込）
     // 5分以内の滞在は誤スキャン等の可能性を考慮して無料
-    if (currentMember.plan === 'dropin') {
+    if (currentMember.plan === 'dropin' && !hasMeetingRoom) {
       if (stayMinutes <= 5) {
         seatFee = 0;
       } else {
@@ -767,6 +780,33 @@ async function loadTodayData() {
 
   if (!visits) return;
 
+  // 本日のMeetingRoom（sku: C003）注文を会員ごとに集計する
+  const todayStartISO = today + 'T00:00:00+09:00';
+  const { data: mrOrders } = await sb.from('order_items')
+    .select('member_id, qty, ordered_at')
+    .eq('sku', 'C003')
+    .gte('ordered_at', todayStartISO);
+  const mrByMember = {};
+  (mrOrders || []).forEach(o => {
+    if (!mrByMember[o.member_id]) mrByMember[o.member_id] = { totalMinutes: 0, firstOrder: o.ordered_at };
+    mrByMember[o.member_id].totalMinutes += (o.qty || 0) * 30;
+    if (o.ordered_at < mrByMember[o.member_id].firstOrder) mrByMember[o.member_id].firstOrder = o.ordered_at;
+  });
+  function meetingRoomRemaining(memberId) {
+    const info = mrByMember[memberId];
+    if (!info) return null;
+    const expiresAt = new Date(info.firstOrder).getTime() + info.totalMinutes * 60000;
+    return Math.round((expiresAt - Date.now()) / 60000);
+  }
+  function meetingRoomLine(v) {
+    const info = mrByMember[v.member_id];
+    if (!info) return '';
+    const remain = Math.max(0, meetingRoomRemaining(v.member_id));
+    const color = remain <= 5 ? '#d32f2f' : '#2e7d32';
+    const note = remain <= 5 ? '（追加購入を）' : '';
+    return '<div style="font-size:11px;color:' + color + ';margin-top:2px;">🏢 MeetingRoom残り' + remain + '分' + note + '</div>';
+  }
+
   function estimateActiveFee(enterTime, plan) {
     if (plan !== 'dropin' || !enterTime) return 0;
     const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', hour12: false });
@@ -779,7 +819,10 @@ async function loadTodayData() {
     const units = Math.ceil(minutes / 30);
     return Math.min(units * 198, 1980);
   }
-  const feeFor = v => v.exit_time ? (v.total_yen || 0) : estimateActiveFee(v.enter_time, v.members?.plan);
+  const feeFor = v => {
+    if (mrByMember[v.member_id]) return 0;
+    return v.exit_time ? (v.total_yen || 0) : estimateActiveFee(v.enter_time, v.members?.plan);
+  };
 
   const inCount = visits.filter(v => !v.exit_time).length;
   const totalSales = visits.reduce((s, v) => s + feeFor(v), 0);
@@ -793,9 +836,10 @@ async function loadTodayData() {
       <div>
         <div class="member-name">${v.members?.name || v.member_id}</div>
         <div class="time">${v.enter_time?.slice(0,5)} 〜 ${v.exit_time?.slice(0,5) || '—'}</div>
+        ${meetingRoomLine(v)}
       </div>
       <div>${v.stay_minutes != null ? v.stay_minutes + '分' : '—'}</div>
-      <div>¥${feeFor(v).toLocaleString()}${!v.exit_time ? '（暫定）' : ''}</div>
+      <div>¥${feeFor(v).toLocaleString()}${!v.exit_time && !mrByMember[v.member_id] ? '（暫定）' : ''}</div>
       <div><span class="status-badge ${v.exit_time ? 'status-out' : 'status-in'}">${v.exit_time ? '退室' : '滞在中'}</span></div>
     </div>
   `).join('') : '<div class="empty">本日の来訪はありません</div>';
