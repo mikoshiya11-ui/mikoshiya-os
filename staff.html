@@ -792,6 +792,16 @@ async function loadTodayData() {
     mrByMember[o.member_id].totalMinutes += (o.qty || 0) * 30;
     if (o.ordered_at < mrByMember[o.member_id].firstOrder) mrByMember[o.member_id].firstOrder = o.ordered_at;
   });
+
+  // 本日の注文（購入品）を会員ごとに集計し、滞在料金とあわせた総額を出せるようにする
+  const { data: allOrders } = await sb.from('order_items')
+    .select('member_id, subtotal')
+    .gte('ordered_at', todayStartISO);
+  const purchaseByMember = {};
+  (allOrders || []).forEach(o => {
+    purchaseByMember[o.member_id] = (purchaseByMember[o.member_id] || 0) + (o.subtotal || 0);
+  });
+
   function meetingRoomRemaining(memberId) {
     const info = mrByMember[memberId];
     if (!info) return null;
@@ -823,9 +833,10 @@ async function loadTodayData() {
     if (mrByMember[v.member_id]) return 0;
     return v.exit_time ? (v.total_yen || 0) : estimateActiveFee(v.enter_time, v.members?.plan);
   };
+  const totalFor = v => feeFor(v) + (purchaseByMember[v.member_id] || 0);
 
   const inCount = visits.filter(v => !v.exit_time).length;
-  const totalSales = visits.reduce((s, v) => s + feeFor(v), 0);
+  const totalSales = visits.reduce((s, v) => s + totalFor(v), 0);
   document.getElementById('statIn').textContent = inCount;
   document.getElementById('statToday').textContent = visits.length;
   document.getElementById('statSales').textContent = '¥' + totalSales.toLocaleString();
@@ -839,7 +850,7 @@ async function loadTodayData() {
         ${meetingRoomLine(v)}
       </div>
       <div>${v.stay_minutes != null ? v.stay_minutes + '分' : '—'}</div>
-      <div>¥${feeFor(v).toLocaleString()}${!v.exit_time && !mrByMember[v.member_id] ? '（暫定）' : ''}</div>
+      <div>¥${totalFor(v).toLocaleString()}${!v.exit_time && !mrByMember[v.member_id] ? '（暫定）' : ''}</div>
       <div><span class="status-badge ${v.exit_time ? 'status-out' : 'status-in'}">${v.exit_time ? '退室' : '滞在中'}</span></div>
     </div>
   `).join('') : '<div class="empty">本日の来訪はありません</div>';
